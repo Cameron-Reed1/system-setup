@@ -12,6 +12,7 @@ BUILD_CMD=""
 
 CACHE_DIR=${XDG_CACHE_HOME:-$HOME/.cache}
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}
+mkdir -p $CACHE_DIR/zsh $STATE_DIR/zsh
 
 
 # The following lines were added by compinstall
