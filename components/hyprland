@@ -12,6 +12,7 @@ function post_install() {
     install -Dm644 $EXTRAS_DIR/images/Lake.jpg $HOME/Pictures/wallpapers/Lake.jpg
     install -Dm644 $EXTRAS_DIR/images/Mountain.jpg $HOME/Pictures/wallpapers/Mountain.jpg
 
+    install -Dm755 $EXTRAS_DIR/scripts/hypr/import_env.sh $HOME/scripts/hypr/import_env.sh
     install -Dm755 $EXTRAS_DIR/scripts/hypr/record.sh $HOME/scripts/hypr/record.sh
     install -Dm755 $EXTRAS_DIR/scripts/wmenu/logout.sh $HOME/scripts/wmenu/logout.sh
 }
