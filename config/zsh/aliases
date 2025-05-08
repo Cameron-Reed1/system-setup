@@ -1,0 +1,58 @@
+#! /usr/bin/env zsh
+
+nixos_config="$HOME/nixos-config/hosts/nixos/configuration.nix"
+
+
+if [ -f "$nixos_config" ]; then
+	alias edit_config="${EDITOR:-vim} $nixos_config"
+fi
+
+unset nixos_config
+
+
+if [ "$TERM" = 'xterm-kitty' ]; then
+	alias ssh='kitty +kitten ssh'
+	alias clear='printf "\033c"'
+fi
+
+
+alias grep='grep --color=auto'
+if command -v eza &> /dev/null; then
+    alias ls='eza --icons=auto --group-directories-first'
+else
+    alias ls='ls --color=auto'
+fi
+
+
+alias nv='nvim'
+alias nvd='nvim .'
+alias nvc='nvim -c "edit \$MYVIMRC"'
+
+# D:
+alias em='emacs'
+
+
+alias c='clear'
+alias cdf='cd $(find -L . -type d -print 2> /dev/null | fzf)'
+alias e='echo'
+alias pf='printf'
+alias ff='fastfetch'
+alias makew='make -f Makefile.win'
+
+alias :w='printf "Saved\n"'
+alias :q='exit'
+alias :wq='exit'
+
+alias mkvenv='python3 -m venv venv'
+alias arduino-cli='arduino-cli --config-dir "$HOME/.config/arduino/"'
+
+if command -v zigup &> /dev/null; then
+    alias zigup='zigup --install-dir "$HOME/.local/share/zigup" --path-link "$HOME/.local/bin/zig-local"'
+fi
+
+alias req='pip3 --require-virtualenv freeze > requirements.txt'
+
+bindkey -s '^o' 'yazicd\n'
+bindkey -s '^n' 'nvd\n'
+bindkey -s '^f' 'yazi\n'
+bindkey -s '^e' 'xdg-open $(fzf)\n'

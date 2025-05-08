@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+dependencies="dev/base"
+packages=""
+
+
+function manual_install() {
+    install_aur_pkg pico-sdk
+    install_aur_pkg picotool
+}

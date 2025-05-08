@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+dependencies=""
+packages="fastfetch newsboat ncdu reflector"
+
+
+function manual_install() {
+    install_aur_pkg dashbinsh
+    install_aur_pkg mkinitcpio-numlock
+}
+
+function install_config() {
+    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
+        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
+    fi
+
+    install -Dm644 $CONFIG_DIR/fastfetch/config.jsonc $HOME/.config/fastfetch/config.jsonc
+    install -Dm644 $CONFIG_DIR/newsboat/urls $HOME/.config/newsboat/urls
+
+    if ! diff $CONFIG_DIR/reflector/reflector.conf /etc/xdg/reflector/reflector.conf; then
+        sudo install -Dm644 $CONFIG_DIR/reflector/reflector.conf /etc/xdg/reflector/reflector.conf
+    fi
+
+    if ! grep -q "^HOOKS=.*[( ]numlock[ )]" /etc/mkinitcpio.conf; then
+        sudo sed -i 's/\(^HOOKS=(.*consolefont\)\(.*\)/\1 numlock\2/' /etc/mkinitcpio.conf
+        # sudo mkinitcpio -P
+    fi
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+dependencies="dev/base dev/rp2040 dev/gnw"
+packages=""

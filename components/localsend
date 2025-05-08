@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+dependencies="dev/base"
+packages="patchelf unzip"
+
+
+function manual_install() {
+    if ! pacman -Q localsend > /dev/null; then
+        sudo pacman -S --needed --noconfirm dart
+        install_aur_pkg fvm
+        install_aur_pkg localsend
+        sudo pacman -Rns fvm dart
+    fi
+}

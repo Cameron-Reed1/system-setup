@@ -1,0 +1,269 @@
+#
+# $ZDOTDIR/.zshrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+
+RUN_CMD=""
+BUILD_CMD=""
+
+
+CACHE_DIR=${XDG_CACHE_HOME:-$HOME/.cache}
+STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}
+
+
+# The following lines were added by compinstall
+
+zstyle ':completion:*' completer _expand _complete _ignored
+zstyle ':completion:*' ignore-parents parent pwd .. directory
+zstyle ':completion:*' max-errors 2
+zstyle ':completion:*' prompt 'Corrected %e errors'
+zstyle ':completion:*' squeeze-slashes true
+zstyle ':completion:*' cache-path $CACHE_DIR/zsh/zcompcache
+zstyle :compinstall filename '/home/cameron-arch/.config/zsh/.zshrc'
+
+autoload -Uz compinit
+compinit -d $CACHE_DIR/zsh/zcompdump-$ZSH_VERSION
+# End of lines added by compinstall
+
+# Lines configured by zsh-newuser-install
+HISTFILE="$STATE_DIR/zsh/history"
+HISTSIZE=1000
+SAVEHIST=1000
+setopt beep nomatch notify
+bindkey -e
+# End of lines configured by zsh-newuser-install
+
+
+# create a zkbd compatible hash;
+# to add other keys to this hash, see: man 5 terminfo
+typeset -g -A key
+
+key[Home]="${terminfo[khome]}"
+key[End]="${terminfo[kend]}"
+key[Insert]="${terminfo[kich1]}"
+key[Backspace]="${terminfo[kbs]}"
+key[Delete]="${terminfo[kdch1]}"
+key[Up]="${terminfo[kcuu1]}"
+key[Down]="${terminfo[kcud1]}"
+key[Left]="${terminfo[kcub1]}"
+key[Right]="${terminfo[kcuf1]}"
+key[PageUp]="${terminfo[kpp]}"
+key[PageDown]="${terminfo[knp]}"
+key[Shift-Tab]="${terminfo[kcbt]}"
+key[Control-Left]="${terminfo[kLFT5]}"
+key[Control-Right]="${terminfo[kRIT5]}"
+
+# setup key accordingly
+[[ -n "${key[Home]}"      ]] && bindkey -- "${key[Home]}"       beginning-of-line
+[[ -n "${key[End]}"       ]] && bindkey -- "${key[End]}"        end-of-line
+[[ -n "${key[Insert]}"    ]] && bindkey -- "${key[Insert]}"     overwrite-mode
+[[ -n "${key[Backspace]}" ]] && bindkey -- "${key[Backspace]}"  backward-delete-char
+[[ -n "${key[Delete]}"    ]] && bindkey -- "${key[Delete]}"     delete-char
+[[ -n "${key[Up]}"        ]] && bindkey -- "${key[Up]}"         up-line-or-history
+[[ -n "${key[Down]}"      ]] && bindkey -- "${key[Down]}"       down-line-or-history
+[[ -n "${key[Left]}"      ]] && bindkey -- "${key[Left]}"       backward-char
+[[ -n "${key[Right]}"     ]] && bindkey -- "${key[Right]}"      forward-char
+[[ -n "${key[PageUp]}"    ]] && bindkey -- "${key[PageUp]}"     beginning-of-buffer-or-history
+[[ -n "${key[PageDown]}"  ]] && bindkey -- "${key[PageDown]}"   end-of-buffer-or-history
+[[ -n "${key[Shift-Tab]}" ]] && bindkey -- "${key[Shift-Tab]}"  reverse-menu-complete
+[[ -n "${key[Control-Left]}"  ]] && bindkey -- "${key[Control-Left]}"  backward-word
+[[ -n "${key[Control-Right]}" ]] && bindkey -- "${key[Control-Right]}" forward-word
+
+# Finally, make sure the terminal is in application mode, when zle is
+# active. Only then are the values from $terminfo valid.
+if (( ${+terminfo[smkx]} && ${+terminfo[rmkx]} )); then
+	autoload -Uz add-zle-hook-widget
+	function zle_application_mode_start { echoti smkx }
+	function zle_application_mode_stop { echoti rmkx }
+	add-zle-hook-widget -Uz zle-line-init zle_application_mode_start
+	add-zle-hook-widget -Uz zle-line-finish zle_application_mode_stop
+fi
+
+
+
+# Configure prompt
+setopt prompt_subst
+PROMPT_COLORS=''
+PROMPT_PREFIXES=''
+
+function set_prompt() {
+	local colors=(${(@s:~:)PROMPT_COLORS})
+	local prefixes=(${(@s:~:)PROMPT_PREFIXES})
+
+    manage_environments
+
+	local prefix="${environment}"
+	for i in $(seq 1 "${#prefixes[@]}"); do
+		prefix+="%F{${colors[$i]:-255}}${prefixes[$i]}%f "
+	done
+
+    local user="${USER_OVERRIDE:-%n}"
+    local host="@${HOST_OVERRIDE:-%m}"
+
+    if [ -z "${SSH_CONNECTION}" ]; then
+        host=""
+    fi
+
+	PROMPT="[${prefix}${user}${host} %1~]%(#.#.$) "
+
+    unset environment
+}
+
+typeset -a precmd_functions
+precmd_functions+=(set_prompt)
+
+
+function manage_environments() {
+    RUN_CMD=""
+    BUILD_CMD=""
+
+    local dir=$(pwd)
+    local depth=0
+    while [ "$dir" != '/' ] && [ "$depth" -lt 20 ]; do
+        if [ -f "$dir/justfile" ]; then
+            environment="just:$(basename $dir) "
+            RUN_CMD="just run"
+            BUILD_CMD="just build"
+            break
+        fi
+
+        if [ -f "$dir/CMakeLists.txt" ] && [ -d "$dir/build" ]; then
+            environment="cmake:$(basename $dir) "
+            RUN_CMD="cmake --build $dir/build --target install"
+            BUILD_CMD="cmake --build $dir/build"
+            break
+        fi
+
+        if [ -f "$dir/Makefile" ]; then
+            environment="make:$(basename $dir) "
+            RUN_CMD="make -C $dir run"
+            BUILD_CMD="make -C $dir"
+            break
+        fi
+
+        if [ -f "$dir/venv/bin/activate" ]; then
+            if [ "$VIRTUAL_ENV" != "$dir/venv" ]; then
+                . "$dir/venv/bin/activate"
+            fi
+            environment="python:$(basename $dir) "
+
+            setopt local_options
+            setopt nullglob
+            local pyfiles=($dir/*.py)
+            if [ -f "$dir/main.py" ]; then
+                RUN_CMD="python3 $dir/main.py"
+            elif [ "${#pyfiles}" -eq 1 ]; then
+                RUN_CMD="python3 ${pyfiles}"
+            fi
+            break
+        fi
+
+        dir=$(dirname "$dir")
+        depth=$(( $depth + 1 ))
+    done
+
+    if [ -n "$VIRTUAL_ENV" ] && [[ ! "$environment" =~ "python" ]]; then
+        deactivate
+    fi
+}
+
+
+function run() {
+    if [ -n "$RUN_CMD" ]; then
+        eval "$RUN_CMD"
+    else
+        printf "Nothing to do here\n"
+    fi
+}
+
+
+function build() {
+    if [ -n "$BUILD_CMD" ]; then
+        eval "$BUILD_CMD"
+    else
+        printf "Nothing to do here\n"
+    fi
+}
+
+
+function toMP4() {
+    ffmpeg -i "$1" -map 0 -c copy -c:a aac "$2"
+}
+
+
+
+# Setup bookmarks
+BOOKMARKS_DIR="$HOME/bookmarks"
+mkdir -p "$BOOKMARKS_DIR"
+export CDPATH="$HOME:$BOOKMARKS_DIR"
+
+function bookmark() {
+    target="$(pwd)"
+    mark_name="${1:-$(basename $(pwd))}"
+
+    if [ -e "$BOOKMARKS_DIR/$mark_name" ]; then
+        echo "Bookmark for $mark_name already exists"
+    else
+        ln -s "$target" "$BOOKMARKS_DIR/$mark_name"
+        echo "Created bookmark $mark_name to $target"
+    fi
+}
+
+function rmbookmark() {
+    if [ -z "$1" ]; then
+        echo "Usage: $0 [mark_name]"
+    else
+        if [ ! -L "$BOOKMARKS_DIR/$1" ]; then
+            echo "No bookmark with name $1"
+        else
+            rm "$BOOKMARKS_DIR/$1"
+        fi
+    fi
+}
+
+function get_idf() {
+    . $HOME/.local/share/esp/esp-idf/export.sh
+    alias idf="idf.py"
+}
+
+function yazicd() {
+    file=$(mktemp)
+    yazi --cwd-file="$file" "$@"
+    cd $(cat "$file")
+    rm "$file"
+}
+
+function py() {
+    if [ "$#" -eq 0 ]; then
+        python3 -i -c 'def clear():print("\x1b[2J\x1b[H",end="")'
+    else
+        python3 "$@"
+    fi
+}
+
+function edit_cfg() {
+    cfg=$(find $HOME/system/config/ -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | fzf)
+    if [ -d "$HOME/system/config/$cfg" ]; then
+        ${EDITOR:-nvim} "$HOME/system/config/$cfg"
+    fi
+}
+
+
+
+# Initialize direnv if it exists
+if command -v direnv &> /dev/null; then
+	eval "$(direnv hook zsh)"
+fi
+
+fastfetch
+
+
+# Unset extra variables
+unset CACHE_DIR
+unset STATE_DIR
+
+
+source $ZDOTDIR/.aliases

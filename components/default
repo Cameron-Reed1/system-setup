@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+dependencies="hyprland terminal launcher display-manager apps dev/full kanata kernel-modules neovim projects ssh tailscale tlp tmux udev utilities waybar yazi zsh"

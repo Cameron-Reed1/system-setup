@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+dependencies=""
+packages="dkms"
+
+
+function manual_install() {
+    install_aur_pkg xone-dkms
+}

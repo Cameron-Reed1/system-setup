@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+dependencies="terminal"
+packages="zsh"
+
+function install_config() {
+    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
+        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
+    fi
+
+    install -Dm644 $CONFIG_DIR/zsh/zshrc $HOME/.config/zsh/.zshrc
+    install -Dm644 $CONFIG_DIR/zsh/zshenv $HOME/.config/zsh/.zshenv
+    install -Dm644 $CONFIG_DIR/zsh/zprofile $HOME/.config/zsh/.zprofile
+    install -Dm644 $CONFIG_DIR/zsh/aliases $HOME/.config/zsh/.aliases
+    install -Dm644 $CONFIG_DIR/zsh/home_zshenv $HOME/.zshenv
+}

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+dependencies=""
+packages=""
+
+
+function install_config() {
+    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
+        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
+    fi
+
+    if ! diff $CONFIG_DIR/udev/50-adafruit.rules /etc/udev/rules.d/50-adafruit.rules; then
+        sudo install -Dm644 $CONFIG_DIR/udev/50-adafruit.rules /etc/udev/rules.d/50-adafruit.rules
+    fi
+
+    if ! diff $CONFIG_DIR/udev/50-arduino.rules /etc/udev/rules.d/50-arduino.rules; then
+        sudo install -Dm644 $CONFIG_DIR/udev/50-arduino.rules /etc/udev/rules.d/50-arduino.rules
+    fi
+
+    if ! diff $CONFIG_DIR/udev/50-nrf.rules /etc/udev/rules.d/50-nrf.rules; then
+        sudo install -Dm644 $CONFIG_DIR/udev/50-nrf.rules /etc/udev/rules.d/50-nrf.rules
+    fi
+
+    if ! diff $CONFIG_DIR/udev/51-esp.rules /etc/udev/rules.d/51-esp.rules; then
+        sudo install -Dm644 $CONFIG_DIR/udev/51-esp.rules /etc/udev/rules.d/51-esp.rules
+    fi
+}

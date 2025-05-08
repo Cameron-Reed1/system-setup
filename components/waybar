@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+dependencies=""
+packages="waybar"
+
+
+function install_config() {
+    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
+        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
+    fi
+
+    install -Dm644 $CONFIG_DIR/waybar/config $HOME/.config/waybar/config
+    install -Dm644 $CONFIG_DIR/waybar/style.css $HOME/.config/waybar/style.css
+}

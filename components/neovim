@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+dependencies="terminal"
+packages="neovim"
+
+
+function install_config() {
+    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
+        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
+    fi
+
+    mkdir -p $HOME/.config/nvim
+    cp -r $CONFIG_DIR/nvim/* ~/.config/nvim
+}

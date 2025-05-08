@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+dependencies="waybar"
+packages="hyprland hyprland-protocols hyprpaper hypridle hyprlock hyprpolkitagent"
+
+
+function post_install() {
+    if [ -z "$EXTRAS_DIR" ] || [ ! -d "$EXTRAS_DIR" ]; then
+        exit_with_err "\$EXTRAS_DIR is not set or is not a directory"
+    fi
+
+    install -Dm644 $EXTRAS_DIR/images/Lake.jpg $HOME/Pictures/wallpapers/Lake.jpg
+    install -Dm644 $EXTRAS_DIR/images/Mountain.jpg $HOME/Pictures/wallpapers/Mountain.jpg
+
+    install -Dm755 $EXTRAS_DIR/scripts/hypr/record.sh $HOME/scripts/hypr/record.sh
+    install -Dm755 $EXTRAS_DIR/scripts/wmenu/logout.sh $HOME/scripts/wmenu/logout.sh
+}
+
+function install_config() {
+    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
+        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
+    fi
+
+    install -Dm644 $CONFIG_DIR/hypr/hyprland.conf $HOME/.config/hypr/hyprland.conf
+    install -Dm644 $CONFIG_DIR/hypr/hyprpaper.conf $HOME/.config/hypr/hyprpaper.conf
+    install -Dm644 $CONFIG_DIR/hypr/hypridle.conf $HOME/.config/hypr/hypridle.conf
+    install -Dm644 $CONFIG_DIR/hypr/hyprlock.conf $HOME/.config/hypr/hyprlock.conf
+}
