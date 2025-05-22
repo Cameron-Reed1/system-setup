@@ -145,6 +145,13 @@ function manage_environments() {
             break
         fi
 
+        if [ -f "$dir/build.zig" ]; then
+            environment="zig:$(basename $dir) "
+            RUN_CMD="zig build run"
+            BUILD_CMD="zig build"
+            break
+        fi
+
         if [ -f "$dir/venv/bin/activate" ]; then
             if [ "$VIRTUAL_ENV" != "$dir/venv" ]; then
                 . "$dir/venv/bin/activate"
