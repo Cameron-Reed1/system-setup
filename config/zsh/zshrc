@@ -181,7 +181,7 @@ function manage_environments() {
 
 function run() {
     if [ -n "$RUN_CMD" ]; then
-        eval "$RUN_CMD"
+        eval "$RUN_CMD $@"
     else
         printf "Nothing to do here\n"
     fi
@@ -190,7 +190,7 @@ function run() {
 
 function build() {
     if [ -n "$BUILD_CMD" ]; then
-        eval "$BUILD_CMD"
+        eval "$BUILD_CMD $@"
     else
         printf "Nothing to do here\n"
     fi
