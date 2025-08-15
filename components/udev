@@ -3,6 +3,8 @@
 dependencies=""
 packages=""
 
+config_path="udev/"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

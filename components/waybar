@@ -3,6 +3,8 @@
 dependencies=""
 packages="waybar"
 
+config_path="waybar/"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

@@ -3,6 +3,8 @@
 dependencies="terminal"
 packages="tmux"
 
+config_path="tmux/tmux.conf"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

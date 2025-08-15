@@ -3,6 +3,8 @@
 dependencies=""
 packages="lemurs"
 
+config_path="lemurs/config.toml"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

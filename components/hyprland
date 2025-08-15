@@ -3,6 +3,8 @@
 dependencies="waybar"
 packages="hyprland hyprland-protocols hyprpaper hypridle hyprlock hyprpolkitagent"
 
+config_path="hypr/"
+
 
 function post_install() {
     if [ -z "$EXTRAS_DIR" ] || [ ! -d "$EXTRAS_DIR" ]; then

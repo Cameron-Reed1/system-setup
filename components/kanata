@@ -3,6 +3,8 @@
 dependencies="dev/base"
 packages=""
 
+config_path="kanata/config.kbd"
+
 
 function manual_install() {
     install_aur_pkg kanata

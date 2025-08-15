@@ -3,6 +3,8 @@
 dependencies="terminal"
 packages="yazi"
 
+config_path="yazi/yazi.toml"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

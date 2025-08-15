@@ -3,6 +3,8 @@
 dependencies=""
 packages="fuzzel"
 
+config_path="fuzzel/fuzzel.ini"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

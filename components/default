@@ -1,3 +1,35 @@
 #!/usr/bin/env bash
 
 dependencies="hyprland terminal launcher display-manager apps dev/full kanata kernel-modules neovim projects ssh tailscale tlp tmux udev utilities waybar yazi zsh"
+
+
+function post_install() {
+    if [ -z "$SETUP_DIR" ] || [ ! -d "$SETUP_DIR" ]; then
+        exit_with_err "\$SETUP_DIR is not set or is not a directory"
+    fi
+
+    if [ ! -f "$SETUP_DIR/config.sh" ]; then
+        exit_with_err "$SETUP_DIR/config.sh is missing!"
+    fi
+
+    src=$(realpath "$SETUP_DIR/config.sh")
+    dest="$HOME/.local/bin/config"
+
+    if [ -f "$dest" ]; then
+        printf "Not installing symlink to config.sh because $dest already exists\n"
+        return 1
+    fi
+
+    if [ -L "$dest" ]; then
+        if [ "$(realpath $dest)" = "src" ]; then # Symlink already points to the correct location
+            return 0
+        fi
+
+        if [ -e "$(realpath $dest)" ]; then
+            printf "Not installing symlink to config.sh because $dest already exists\n"
+            return 1
+        fi
+    fi
+
+    ln -s "$src" "$dest"
+}

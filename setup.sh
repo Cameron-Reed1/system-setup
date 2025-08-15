@@ -1,46 +1,13 @@
 #!/usr/bin/env bash
 
 
-if [ -n "$TRACE" ]; then
-    set -x
-fi
-set -o pipefail
-export SHELLOPTS
-
-
-export SETUP_DIR=${SETUP_DIR:-$(dirname $(realpath $0))}
-export COMPONENT_DIR="${COMPONENT_DIR:-$SETUP_DIR/components}"
-export CONFIG_DIR="${CONFIG_DIR:-$SETUP_DIR/config}"
-export EXTRAS_DIR="${EXTRAS_DIR:-$SETUP_DIR/extras}"
-
-function exit_with_err() {
-    printf "$(caller | awk '{print $NF}'): $@\n" >&2
+export SETUP_DIR="${SETUP_DIR:-$(dirname $(realpath $0))}"
+export UTIL_DIR="${UTIL_DIR:-$SETUP_DIR/util}"
+if [ ! -d "$UTIL_DIR" ]; then
+    printf "\$UTIL_DIR must point to the util/ directory, but is set to $UTIL_DIR, which is not a directory"
     exit -1
-}
-
-function install_aur_pkg() {
-    if pacman -Q $1 > /dev/null; then
-        return
-    fi
-
-    if [ -d $HOME/builds/$1 ]; then
-        printf "Build directory for $1 already exists. Skipping installation\n"
-        return
-    fi
-    mkdir -p $HOME/builds
-
-    git clone https://aur.archlinux.org/$1.git $HOME/builds/$1
-    ${EDITOR:-vim} $HOME/builds/$1/PKGBUILD
-    read -p "Install $1? [y/N]: "
-
-    if [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ]; then
-        cd $HOME/builds/$1
-        makepkg -ic
-        cd -
-    fi
-}
-export -f exit_with_err
-export -f install_aur_pkg
+fi
+source "$UTIL_DIR/common"
 
 
 COMPONENTS=()
@@ -61,7 +28,7 @@ function add_component() {
     fi
     COMPONENTS+=($1)
 
-    deps=$(./runComponent.sh $1 get_var dependencies)
+    deps=$("$UTIL_DIR"/runComponent.sh $1 get_var dependencies)
     if [ -n "$deps" ]; then
         for dep in $deps; do
             add_component $dep
@@ -84,7 +51,7 @@ function install_packages() {
     }
 
     for component in "${COMPONENTS[@]}"; do
-        pkgs=$(./runComponent.sh $component get_var packages)
+        pkgs=$("$UTIL_DIR"/runComponent.sh $component get_var packages)
         if [ -n "$pkgs" ]; then
             for pkg in $pkgs; do add_package $pkg; done
         fi
@@ -95,17 +62,17 @@ function install_packages() {
     fi
 
     for component in "${COMPONENTS[@]}"; do
-        ./runComponent.sh $component post_install
+        "$UTIL_DIR"/runComponent.sh $component post_install
     done
 
     for component in "${COMPONENTS[@]}"; do
-        ./runComponent.sh $component manual_install
+        "$UTIL_DIR"/runComponent.sh $component manual_install
     done
 }
 
 function install_configs() {
     for component in "${COMPONENTS[@]}"; do
-        ./runComponent.sh $component install_config
+        "$UTIL_DIR"/runComponent.sh $component install_config
     done
 }
 

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+
+if [ -n "$TRACE" ]; then
+    set -x
+fi
+set -o pipefail
+export SHELLOPTS
+
+
+export COMPONENT_DIR="${COMPONENT_DIR:-$SETUP_DIR/components}"
+export CONFIG_DIR="${CONFIG_DIR:-$SETUP_DIR/config}"
+export EXTRAS_DIR="${EXTRAS_DIR:-$SETUP_DIR/extras}"
+
+
+function exit_with_err() {
+    printf "$(caller | awk '{print $NF}'): $@\n" >&2
+    exit -1
+}
+
+
+function install_aur_pkg() {
+    if pacman -Q $1 > /dev/null; then
+        return
+    fi
+
+    if [ -d $HOME/builds/$1 ]; then
+        printf "Build directory for $1 already exists. Skipping installation\n"
+        return
+    fi
+    mkdir -p $HOME/builds
+
+    git clone https://aur.archlinux.org/$1.git $HOME/builds/$1
+    ${EDITOR:-vim} $HOME/builds/$1/PKGBUILD
+    read -p "Install $1? [y/N]: "
+
+    if [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ]; then
+        cd $HOME/builds/$1
+        makepkg -ic
+        cd -
+    fi
+}
+
+
+export -f exit_with_err
+export -f install_aur_pkg

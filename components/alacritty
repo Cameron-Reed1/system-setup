@@ -3,6 +3,8 @@
 dependencies=""
 packages="alacritty"
 
+config_path="alacritty/alacritty.toml"
+
 
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then

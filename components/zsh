@@ -3,6 +3,8 @@
 dependencies="terminal"
 packages="zsh"
 
+config_path="zsh/"
+
 function install_config() {
     if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
         exit_with_err "\$CONFIG_DIR is not set or is not a directory"
