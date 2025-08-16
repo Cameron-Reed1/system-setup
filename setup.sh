@@ -11,6 +11,7 @@ source "$UTIL_DIR/common"
 
 
 COMPONENTS=()
+DEPENDENCIES=()
 
 RUN_INSTALL_STEP=0
 RUN_CONFIG_STEP=0
@@ -27,18 +28,53 @@ function add_component() {
         return
     fi
     COMPONENTS+=($1)
+}
+
+
+function add_dependency() {
+    if [[ "$1" =~ ' ' ]]; then
+        exit_with_err "Invalid component name: '$1' contains a space"
+    fi
+
+    [[ " ${COMPONENTS[@]} " =~ " $1 " ]] && return;
+    [[ " ${DEPENDENCIES[@]} " =~ " $1 " ]] && return;
+    if [ ! -f "$COMPONENT_DIR/$1" ]; then
+        printf "$1 component does not exist\n"
+        return
+    fi
+    DEPENDENCIES+=($1)
 
     deps=$("$UTIL_DIR"/runComponent.sh $1 get_var dependencies)
     if [ -n "$deps" ]; then
         for dep in $deps; do
-            add_component $dep
+            add_dependency $dep
         done
     fi
 }
 
 
+function find_dependencies() {
+    for component in "${COMPONENTS[@]}"; do
+        local deps=$("$UTIL_DIR"/runComponent.sh $component get_var dependencies)
+        if [ -n "$deps" ]; then
+            for dep in $deps; do
+                add_dependency $dep
+            done
+        fi
+    done
+}
+
+
 function install_packages() {
-    packages=()
+    local all_components=()
+    local packages=()
+
+    for component in "${COMPONENTS[@]}"; do
+        all_components+=($component)
+    done
+    for component in "${DEPENDENCIES[@]}"; do
+        all_components+=($component)
+    done
 
     function add_package() {
         if [[ "$@" =~ ' ' ]]; then
@@ -50,7 +86,7 @@ function install_packages() {
         packages+=($1)
     }
 
-    for component in "${COMPONENTS[@]}"; do
+    for component in "${all_components[@]}"; do
         pkgs=$("$UTIL_DIR"/runComponent.sh $component get_var packages)
         if [ -n "$pkgs" ]; then
             for pkg in $pkgs; do add_package $pkg; done
@@ -61,20 +97,22 @@ function install_packages() {
         sudo pacman -S --needed --noconfirm ${packages[*]}
     fi
 
-    for component in "${COMPONENTS[@]}"; do
+    for component in "${all_components[@]}"; do
         "$UTIL_DIR"/runComponent.sh $component post_install
     done
 
-    for component in "${COMPONENTS[@]}"; do
+    for component in "${all_components[@]}"; do
         "$UTIL_DIR"/runComponent.sh $component manual_install
     done
 }
+
 
 function install_configs() {
     for component in "${COMPONENTS[@]}"; do
         "$UTIL_DIR"/runComponent.sh $component install_config
     done
 }
+
 
 function usage() {
     printf """Usage: $0 [steps] [<component>...]
@@ -85,6 +123,7 @@ Steps:
     --full\n"""
     exit 0
 }
+
 
 function parse_opts() {
     while [ -n "$1" ]; do
@@ -109,10 +148,13 @@ function parse_opts() {
     if [ -z "${COMPONENTS[*]}" ]; then
         add_component "default"
     fi
-    printf "RUN_INSTALL_STEP: $RUN_INSTALL_STEP\nRUN_CONFIG_STEP: $RUN_CONFIG_STEP\nCOMPONENTS: ${COMPONENTS[*]}\n"
 }
 
+
 parse_opts "$@"
+find_dependencies
+
+printf "RUN_INSTALL_STEP: $RUN_INSTALL_STEP\nRUN_CONFIG_STEP: $RUN_CONFIG_STEP\nCOMPONENTS: ${COMPONENTS[*]}\nDEPENDENCIES: ${DEPENDENCIES[*]}\n\n"
 
 if [ "$RUN_INSTALL_STEP" -eq 1 ]; then
     install_packages
