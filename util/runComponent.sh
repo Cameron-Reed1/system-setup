@@ -4,7 +4,7 @@
 COMPONENT="$1"
 ACTION="$2"
 
-VALID_VARS="dependencies packages config_path"
+VALID_VARS="dependencies packages config"
 VALID_ACTIONS="post_install manual_install install_config"
 
 

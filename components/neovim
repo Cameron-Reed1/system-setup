@@ -3,7 +3,7 @@
 dependencies="terminal"
 packages="neovim"
 
-config_path="nvim/"
+config="nvim/"
 
 
 function install_config() {

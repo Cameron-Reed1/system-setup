@@ -3,7 +3,7 @@
 dependencies=""
 packages="waybar"
 
-config_path="waybar/"
+config="waybar/config,waybar/style.css"
 
 
 function install_config() {

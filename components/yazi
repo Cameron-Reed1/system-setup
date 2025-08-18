@@ -3,7 +3,7 @@
 dependencies="terminal"
 packages="yazi"
 
-config_path="yazi/yazi.toml"
+config="yazi/yazi.toml"
 
 
 function install_config() {

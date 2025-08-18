@@ -26,7 +26,7 @@ EDITOR="${EDITOR:-$DEFAULT_EDITOR}"
 
 
 function usage() {
-    printf """Usage: $0 [action] [components]
+    printf """Usage: $0 [action] [<component>..]
 
 action: edit | apply\n"""
 }
@@ -46,30 +46,106 @@ function add_component() {
 }
 
 
-function edit_file() {
+function copy() {
+    local source="$1"
+    local dest="$2"
+
+    if [ -f "$source" ]; then
+        if [ -e "$dest" ] && [ ! -f "$dest" ]; then
+            printf "Refusing to copy $source to $dest. Source is a file, but destination is not\n"
+            return 1
+        fi
+
+        if ! diff "$source" "$dest" > /dev/null 2>&1; then
+            mkdir -p $(dirname "$dest")
+            cp "$source" "$dest"
+        fi
+    elif [ -d "$source" ]; then
+        if [ -e "$dest" ] && [ ! -d "$dest" ]; then
+            printf "Refusing to copy $source to $dest. Source is a directory, but destination is not\n"
+            return 1
+        fi
+
+        if ! diff -r "$source" "$dest" > /dev/null 2>&1; then
+            if [ -d "$dest" ]; then
+                rm -rf "$dest"/{*,.*} # delete everything inside the directory, but not the directory itself
+            fi
+            mkdir -p "$dest"
+            cp -r "$source/." "$dest"
+        fi
+    else
+        printf "WARNING: cannot copy $source to $dest because it does not exist"
+    fi
+}
+
+
+function for_config_item() {
+    local component="$1"
+    local cb="$2"
+
+    local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
+    if [ -z "$config" ]; then
+        printf "INFO: $component has no config defined\n"
+        continue
+    fi
+
+    local cfg_arr
+    IFS=',' read -r -a cfg_arr <<< "$config"
+    for entry in "${cfg_arr[@]}"; do
+        local first="${entry%:*}"
+        local second="${entry##*:}"
+
+        case "$second" in
+            /*)
+                ;;
+            ~/*)
+                second=$(printf "$second" | sed -e "s|^~|$HOME|");;
+            ~*)
+                exit_with_err "Referencing other user's home directory is unsupported";;
+            *)
+                second="$XDG_CONFIG_HOME/$second";;
+        esac
+
+        first="$CONFIG_DIR/$first"
+
+        "$cb" "$first" "$second"
+    done
+}
+
+
+function edit_single() {
     local component="$1"
     local path="$2"
-    [ ! -f "$path" ] || [[ "$path" =~ "^${CONFIG_DIR}.*" ]] && return -1;
+    [[ "$path" =~ "^${CONFIG_DIR}.*" ]] && return -1;
     local base=$(basename "$path")
     local name="${base%.*}"
     local ext="${base##*.}"
 
     local template="${name}-XXXXXXXXXX"
-    if [ -n "$ext" ]; then
+    if [ "$ext" != "$base" ]; then  # ext and name will both be $base if there is no .
         template="${template}.${ext}"
     fi
-    local tmp_file=$(mktemp --tmpdir "$template")
 
-    cp "$path" "$tmp_file"
-    $EDITOR "$tmp_file"
+    local tmp
+    if [ -f "$path" ]; then
+        tmp=$(mktemp --tmpdir "$template")
+    elif [ -d "$path" ]; then
+        tmp=$(mktemp -d --tmpdir "$template")
+    else
+        return -1
+    fi
 
-    if diff "$path" "$tmp_file" > /dev/null 2>&1; then
+    copy "$path" "$tmp"
+    $EDITOR "$tmp"
+
+    if diff -r "$path" "$tmp" > /dev/null 2>&1; then
         # No changes were made
-        rm "$tmp_file"
+        rm -r "$tmp"
         return 0
     fi
 
-    mv "$tmp_file" "$path"
+    copy "$tmp" "$path"
+    rm -r "$tmp"
 
     local input=""
     while true; do
@@ -87,26 +163,32 @@ function edit_file() {
     done
 }
 
-
-function edit_dir() {
+function edit_multiple() {
     local component="$1"
-    local path="$2"
-    [ ! -d "$path" ] || [[ "$path" =~ "^${CONFIG_DIR}.*" ]] && return -1;
-    local name=$(basename "$path")
-    local template="${name}-XXXXXXXXXX"
+
+    local template="${component}-XXXXXXXXXX"
     local tmp_dir=$(mktemp -d --tmpdir "$template")
 
-    cp -r "$path/." "$tmp_dir"
+    function _cb1() {
+        copy "$1" "$tmp_dir/$(basename "$1")"
+    }
+    for_config_item $component _cb1
+
     $EDITOR "$tmp_dir"
 
-    if diff -r "$path" "$tmp_dir" > /dev/null 2>&1; then
-        # No changes were made
-        rm -r "$tmp_dir"
-        return 0
-    fi
+    local changed=0
+    function _cb2() {
+        if ! diff -r "$tmp_dir/$(basename "$1")" "$1" > /dev/null 2>&1; then
+            changed=1
+        fi
+        copy "$tmp_dir/$(basename "$1")" "$1"
+    }
+    for_config_item $component _cb2
 
-    rm -r "$path" # To ensure that deleted files don't stick around
-    mv "$tmp_dir" "$path"
+    rm -r "$tmp_dir"
+    if [ "$changed" -eq 0 ]; then
+        return 0;
+    fi
 
     local input=""
     while true; do
@@ -127,29 +209,72 @@ function edit_dir() {
 
 function action_edit() {
     for component in "${COMPONENTS[@]}"; do
-        local cfg=$("$UTIL_DIR"/runComponent.sh $component get_var config_path)
-        if [ -z "$cfg" ]; then
-            printf "No config available for $component"
+        printf "Editing $component\n"
+        local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
+        if [ -z "$config" ]; then
+            printf "No config available for $component\n"
             continue
         fi
-        cfg=$(realpath "$CONFIG_DIR/$cfg") # get rid of potential '..'s
 
-        if [ -f "$cfg" ]; then
-            edit_file $component "$cfg"
-        elif [ -d "$cfg" ]; then
-            edit_dir $component "$cfg"
+        local cfg
+        IFS="," read -r -a cfg <<< "$config"
+        if [ "${#cfg[@]}" -eq 0 ]; then
+            continue
+        elif [ "${#cfg[@]}" -eq 1 ]; then
+            local path="${cfg[0]}"
+            path="${path%:*}"
+            edit_single $component "$CONFIG_DIR/$path"
+        else
+            edit_multiple $component
         fi
     done
 }
 
 
 function apply_component() {
-    "$UTIL_DIR"/runComponent.sh $1 install_config
+    function _cb() {
+        copy "$1" "$2"
+    }
+
+    for_config_item $1 _cb
 }
 
 function action_apply() {
     for component in "${COMPONENTS[@]}"; do
         apply_component $component
+    done
+}
+
+
+function reset_component() {
+    function _cb() {
+        copy "$2" "$1"
+    }
+
+    for_config_item $1 _cb
+}
+
+function action_reset() {
+    for component in "${COMPONENTS[@]}"; do
+        reset_component $component
+    done
+}
+
+
+function action_show() {
+    for component in "${COMPONENTS[@]}"; do
+        function _cb() {
+            local first="$1"
+            local second="$2"
+            if diff "$first" "$second" > /dev/null 2>&1; then
+                printf "\t$first maps to $second\n"
+            else
+                printf "\t$first maps to $second, and they differ\n"
+            fi
+        }
+        printf "$component:\n"
+        for_config_item $component _cb
+        printf "\n"
     done
 }
 
@@ -177,6 +302,10 @@ case "$ACTION" in
         action_edit;;
     apply)
         action_apply;;
+    reset)
+        action_reset;;
+    show)
+        action_show;;
     *)
         printf "Invalid action: $ACTION\n"
         usage

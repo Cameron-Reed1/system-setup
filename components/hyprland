@@ -3,7 +3,7 @@
 dependencies="waybar"
 packages="hyprland hyprland-protocols hyprpaper hypridle hyprlock hyprpolkitagent"
 
-config_path="hypr/"
+config="hypr/hyprland.conf,hypr/hyprpaper.conf,hypr/hypridle.conf,hypr/hyprlock.conf"
 
 
 function post_install() {

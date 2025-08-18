@@ -8,12 +8,21 @@ function post_install() {
         exit_with_err "\$SETUP_DIR is not set or is not a directory"
     fi
 
+    if [ -z "$COMPONENT_DIR" ] || [ ! -d "$COMPONENT_DIR" ]; then
+        exit_with_err "\$COMPONENT_DIR is not set or is not a directory"
+    fi
+
     if [ ! -f "$SETUP_DIR/config.sh" ]; then
         exit_with_err "$SETUP_DIR/config.sh is missing!"
     fi
 
+
     src=$(realpath "$SETUP_DIR/config.sh")
     dest="$HOME/.local/bin/config"
+
+    comp_src=$(realpath "$SETUP_DIR/completions/zsh/_config")
+    comp_dest='/usr/local/share/zsh/site-functions/_config'
+
 
     if [ -f "$dest" ]; then
         printf "Not installing symlink to config.sh because $dest already exists\n"
@@ -32,4 +41,15 @@ function post_install() {
     fi
 
     ln -s "$src" "$dest"
+
+
+    if [ ! -d $(dirname "$comp_dest") ]; then
+        sudo mkdir -p $(dirname "$comp_dest")
+    fi
+
+    if [ -f "$comp_dest" ] && diff "$comp_src" "$comp_dest"; then
+        return 0
+    fi
+
+    sed "$comp_src" -e "s|__COMPONENT_DIR__|${COMPONENT_DIR}|" | sudo tee "$comp_dest" > /dev/null
 }

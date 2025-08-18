@@ -3,7 +3,7 @@
 dependencies=""
 packages="fastfetch newsboat ncdu reflector"
 
-config_path="fastfetch/config.jsonc"
+config="fastfetch/config.jsonc,newsboat/urls,reflector/reflector.conf:/etc/xdg/reflector/reflector.conf"
 
 
 function manual_install() {

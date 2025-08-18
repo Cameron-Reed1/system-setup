@@ -3,7 +3,7 @@
 dependencies="dev/base"
 packages=""
 
-config_path="kanata/config.kbd"
+config="kanata/config.kbd"
 
 
 function manual_install() {

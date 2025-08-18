@@ -3,7 +3,7 @@
 dependencies=""
 packages="alacritty"
 
-config_path="alacritty/alacritty.toml"
+config="alacritty/alacritty.toml"
 
 
 function install_config() {

@@ -3,7 +3,7 @@
 dependencies="terminal"
 packages="tmux"
 
-config_path="tmux/tmux.conf"
+config="tmux/tmux.conf"
 
 
 function install_config() {

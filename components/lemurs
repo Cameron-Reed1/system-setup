@@ -3,7 +3,7 @@
 dependencies=""
 packages="lemurs"
 
-config_path="lemurs/config.toml"
+config="lemurs/config.toml:/etc/lemurs/config.toml"
 
 
 function install_config() {

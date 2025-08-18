@@ -7,6 +7,12 @@ fi
 set -o pipefail
 export SHELLOPTS
 
+if [ -z "$HOME" ]; then
+    printf "Fatal error: \$HOME is not set!\n"
+    exit -1
+fi
+
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 export COMPONENT_DIR="${COMPONENT_DIR:-$SETUP_DIR/components}"
 export CONFIG_DIR="${CONFIG_DIR:-$SETUP_DIR/config}"
