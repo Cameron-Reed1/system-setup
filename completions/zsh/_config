@@ -1,0 +1,3 @@
+#compdef config
+
+_arguments '-h[show help]' '--help[show help]' '1:action arg:((edit\:"edit configs" apply\:"apply configs" reset\:"reset working config to the currently active version" show\:"show config mappings"))' '*:component arg:_path_files -W __COMPONENT_DIR__'
