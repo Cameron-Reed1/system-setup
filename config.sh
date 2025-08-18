@@ -28,7 +28,7 @@ EDITOR="${EDITOR:-$DEFAULT_EDITOR}"
 function usage() {
     printf """Usage: $0 [action] [<component>..]
 
-action: edit | apply\n"""
+action: edit | apply | reset | show\n"""
 }
 
 
