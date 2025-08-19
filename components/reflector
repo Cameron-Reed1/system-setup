@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+packages="reflector"
+
+config="reflector/reflector.conf:/etc/xdg/reflector/reflector.conf"

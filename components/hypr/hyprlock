@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+packages="hyprlock"
+
+config="hypr/hyprlock.conf"

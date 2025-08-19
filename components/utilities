@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-dependencies=""
-packages="fastfetch newsboat ncdu reflector"
-
-config="fastfetch/config.jsonc,newsboat/urls,reflector/reflector.conf:/etc/xdg/reflector/reflector.conf"
+dependencies="fastfetch newsboat reflector"
+packages="ncdu"
 
 
 function manual_install() {
