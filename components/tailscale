@@ -4,16 +4,12 @@ dependencies=""
 packages="tailscale"
 
 
-function install_config() {
+function manual_config() {
     if [ "$(tailscale status)" != "Logged out." ]; then
         printf "Skipping tailscale config\n"
         return
     fi
 
-    sudo tailscale login --nickname=home --accept-routes --login-server=https://scale.cam123.dev:443
-    sudo tailscale login --nickname=shared
-    sudo tailscale login --nickname=testing
-
-    sudo tailscale switch home
+    sudo tailscale login --qr --nickname=home --accept-routes --login-server=https://scale.cam123.dev:443
     sudo tailscale up
 }

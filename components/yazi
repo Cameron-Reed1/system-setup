@@ -4,12 +4,3 @@ dependencies="terminal"
 packages="yazi"
 
 config="yazi/yazi.toml"
-
-
-function install_config() {
-    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
-        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
-    fi
-
-    install -Dm644 $CONFIG_DIR/yazi/yazi.toml $HOME/.config/yazi/yazi.toml
-}

@@ -9,11 +9,3 @@ config="kanata/config.kbd"
 function manual_install() {
     install_aur_pkg kanata
 }
-
-function install_config() {
-    if [ -z "$CONFIG_DIR" ] || [ ! -d "$CONFIG_DIR" ]; then
-        exit_with_err "\$CONFIG_DIR is not set or is not a directory"
-    fi
-
-    install -Dm644 $CONFIG_DIR/kanata/config.kbd $HOME/.config/kanata/config.kbd
-}

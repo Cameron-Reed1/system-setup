@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 
-COMPONENT="$1"
-ACTION="$2"
+COMPONENT="$1"; shift
+ACTION="$1"; shift
 
 VALID_VARS="dependencies packages config"
-VALID_ACTIONS="post_install manual_install install_config"
+VALID_ACTIONS="manual_install post_install manual_config"
 
 
 function run_if_exists() {
@@ -32,10 +32,6 @@ function perform_action() {
 }
 
 
-# if [ "$#" -ne 2 ]; then
-#     exit_with_err "Incorrect number of arguments"
-# fi
-
 if [ ! -d "$COMPONENT_DIR" ]; then
     exit_with_err '$COMPONENT_DIR is not set or is not a directory'
 fi
@@ -48,6 +44,5 @@ if [[ "$ACTION" =~ ' ' ]]; then
     exit_with_err "Invalid action: '$ACTION' contains a space"
 fi
 
-shift
-shift
+
 perform_action "$@"

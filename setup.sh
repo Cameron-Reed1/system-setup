@@ -98,19 +98,20 @@ function install_packages() {
     fi
 
     for component in "${all_components[@]}"; do
-        "$UTIL_DIR"/runComponent.sh $component post_install
+        "$UTIL_DIR"/runComponent.sh $component manual_install
     done
 
     for component in "${all_components[@]}"; do
-        "$UTIL_DIR"/runComponent.sh $component manual_install
+        "$UTIL_DIR"/runComponent.sh $component post_install
     done
 }
 
 
 function install_configs() {
-    for component in "${COMPONENTS[@]}"; do
-        "$UTIL_DIR"/runComponent.sh $component install_config
-    done
+    "$SETUP_DIR"/config.sh show ${COMPONENTS[*]}
+    if [ "$RUN_INSTALL_STEP" -eq 1 ]; then
+        "$SETUP_DIR"/config.sh apply ${DEPENDENCIES[*]}
+    fi
 }
 
 
