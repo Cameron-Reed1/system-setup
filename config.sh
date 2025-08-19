@@ -46,39 +46,6 @@ function add_component() {
 }
 
 
-function copy() {
-    local source="$1"
-    local dest="$2"
-
-    if [ -f "$source" ]; then
-        if [ -e "$dest" ] && [ ! -f "$dest" ]; then
-            printf "Refusing to copy $source to $dest. Source is a file, but destination is not\n"
-            return 1
-        fi
-
-        if ! diff "$source" "$dest" > /dev/null 2>&1; then
-            mkdir -p $(dirname "$dest")
-            cp "$source" "$dest"
-        fi
-    elif [ -d "$source" ]; then
-        if [ -e "$dest" ] && [ ! -d "$dest" ]; then
-            printf "Refusing to copy $source to $dest. Source is a directory, but destination is not\n"
-            return 1
-        fi
-
-        if ! diff -r "$source" "$dest" > /dev/null 2>&1; then
-            if [ -d "$dest" ]; then
-                rm -rf "$dest"/{*,.*} # delete everything inside the directory, but not the directory itself
-            fi
-            mkdir -p "$dest"
-            cp -r "$source/." "$dest"
-        fi
-    else
-        printf "WARNING: cannot copy $source to $dest because it does not exist"
-    fi
-}
-
-
 function for_config_item() {
     local component="$1"
     local cb="$2"
@@ -86,7 +53,7 @@ function for_config_item() {
     local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
     if [ -z "$config" ]; then
         printf "INFO: $component has no config defined\n"
-        continue
+        return 0
     fi
 
     local cfg_arr
@@ -237,6 +204,8 @@ function apply_component() {
     }
 
     for_config_item $1 _cb
+    "$UTIL_DIR"/runComponent.sh $1 manual_config
+    "$UTIL_DIR"/runComponent.sh $1 post_config
 }
 
 function action_apply() {
@@ -267,9 +236,9 @@ function action_show() {
             local first="$1"
             local second="$2"
             if diff "$first" "$second" > /dev/null 2>&1; then
-                printf "\t$first maps to $second\n"
+                printf "\t$first -> $second\n"
             else
-                printf "\t$first maps to $second, and they differ\n"
+                printf "\t$first -> $second [diff]\n"
             fi
         }
         printf "$component:\n"

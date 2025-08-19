@@ -48,5 +48,49 @@ function install_aur_pkg() {
 }
 
 
+function copy() {
+    local source="$1"
+    local dest="$2"
+
+    local USE_SUDO=""
+    local dir="$dest"
+    while [ "$dir" != '/' ] && [ ! -d "$dir" ]; do
+        dir=$(dirname "$dir")
+    done
+    if [ ! -w "$dir" ]; then
+        USE_SUDO="sudo"
+    fi
+    printf "\$USE_SUDO=\"$USE_SUDO\"\n"
+
+    if [ -f "$source" ]; then
+        if [ -e "$dest" ] && [ ! -f "$dest" ]; then
+            printf "Refusing to copy $source to $dest. Source is a file, but destination is not\n"
+            return 1
+        fi
+
+        if ! diff "$source" "$dest" > /dev/null 2>&1; then
+            $USE_SUDO mkdir -p $(dirname "$dest")
+            $USE_SUDO cp "$source" "$dest"
+        fi
+    elif [ -d "$source" ]; then
+        if [ -e "$dest" ] && [ ! -d "$dest" ]; then
+            printf "Refusing to copy $source to $dest. Source is a directory, but destination is not\n"
+            return 1
+        fi
+
+        if ! diff -r "$source" "$dest" > /dev/null 2>&1; then
+            if [ -d "$dest" ]; then
+                $USE_SUDO rm -rf "$dest"/{*,.*} # delete everything inside the directory, but not the directory itself
+            fi
+            $USE_SUDO mkdir -p "$dest"
+            $USE_SUDO cp -r "$source/." "$dest"
+        fi
+    else
+        printf "WARNING: cannot copy $source to $dest because it does not exist"
+    fi
+}
+
+
 export -f exit_with_err
 export -f install_aur_pkg
+export -f copy
