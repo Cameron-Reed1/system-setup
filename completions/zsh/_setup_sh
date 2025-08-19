@@ -1,0 +1,3 @@
+#compdef setup.sh
+
+_arguments '-h[show help]' '--help[show help]' '*:component arg:_path_files -W __COMPONENT_DIR__'
