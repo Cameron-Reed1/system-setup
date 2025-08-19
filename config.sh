@@ -205,7 +205,6 @@ function apply_component() {
 
     for_config_item $1 _cb
     "$UTIL_DIR"/runComponent.sh $1 manual_config
-    "$UTIL_DIR"/runComponent.sh $1 post_config
 }
 
 function action_apply() {
