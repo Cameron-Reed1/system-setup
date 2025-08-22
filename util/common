@@ -17,11 +17,23 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export COMPONENT_DIR="${COMPONENT_DIR:-$SETUP_DIR/components}"
 export CONFIG_DIR="${CONFIG_DIR:-$SETUP_DIR/config}"
 export EXTRAS_DIR="${EXTRAS_DIR:-$SETUP_DIR/extras}"
+export PATCH_DIR="${PATCH_DIR:-$SETUP_DIR/patches}"
 
 
 function exit_with_err() {
     printf "$(caller | awk '{print $NF}'): $@\n" >&2
     exit -1
+}
+
+
+function valid_component() {
+    [ -z "$1" ] && exit_with_err "Empty component name"
+    [[ "$1" =~ ' ' ]] && exit_with_err "Invalid component name: '$1' contains a space"
+    if [ ! -f "$COMPONENT_DIR/$1" ]; then
+        printf "$1 component does not exist\n"
+        return 1
+    fi
+    return 0
 }
 
 
@@ -60,7 +72,6 @@ function copy() {
     if [ ! -w "$dir" ]; then
         USE_SUDO="sudo"
     fi
-    printf "\$USE_SUDO=\"$USE_SUDO\"\n"
 
     if [ -f "$source" ]; then
         if [ -e "$dest" ] && [ ! -f "$dest" ]; then
@@ -92,5 +103,6 @@ function copy() {
 
 
 export -f exit_with_err
+export -f valid_component
 export -f install_aur_pkg
 export -f copy

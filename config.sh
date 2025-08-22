@@ -12,12 +12,15 @@ source "$UTIL_DIR/common"
 
 ACTION=""
 DEFAULT_EDITOR=""
+ARGS=()
 COMPONENTS=()
 
 if command -v nvim > /dev/null; then
     DEFAULT_EDITOR="nvim"
 elif command -v vim > /dev/null; then
     DEFAULT_EDITOR="vim"
+elif command -v vi > /dev/null; then
+    DEFAULT_EDITOR="vi"
 elif command -v nano > /dev/null; then
     DEFAULT_EDITOR="nano"
 fi
@@ -33,15 +36,8 @@ action: edit | apply | reset | show\n"""
 
 
 function add_component() {
-    if [[ "$1" =~ ' ' ]]; then
-        exit_with_err "Invalid component name: '$1' contains a space"
-    fi
-
+    valid_component "$1" || return
     [[ " ${COMPONENTS[@]} " =~ " $1 " ]] && return;
-    if [ ! -f "$COMPONENT_DIR/$1" ]; then
-        printf "$1 component does not exist\n"
-        return
-    fi
     COMPONENTS+=($1)
 }
 
@@ -234,11 +230,9 @@ function action_show() {
         function _cb() {
             local first="$1"
             local second="$2"
-            if diff "$first" "$second" > /dev/null 2>&1; then
-                printf "\t$first -> $second\n"
-            else
-                printf "\t$first -> $second [diff]\n"
-            fi
+
+            printf "\t$first -> $second\n"
+            diff -r "$first" "$second"
         }
         printf "$component:\n"
         for_config_item $component _cb
@@ -247,24 +241,156 @@ function action_show() {
 }
 
 
+function valid_patch_name() {
+    if [ -z "$1" ] || [[ "$1" =~ ' ' ]] || [[ "$1" =~ '/' ]]; then
+        return 1
+    fi
+    return 0
+}
+
+function mkpatch_single() {
+    local component="$1"
+    local path="$2"
+    local patch_name="$3"
+    local base=$(basename "$path")
+    local name="${base%.*}"
+    local ext="${base##*.}"
+
+    local template="${name}-XXXXXXXXXX"
+    if [ "$ext" != "$base" ]; then  # ext and name will both be $base if there is no .
+        template="${template}.${ext}"
+    fi
+
+    local tmp
+    if [ -f "$path" ]; then
+        tmp=$(mktemp --tmpdir "$template")
+    elif [ -d "$path" ]; then
+        tmp=$(mktemp -d --tmpdir "$template")
+    else
+        return -1
+    fi
+
+    copy "$path" "$tmp"
+    $EDITOR "$tmp"
+
+    mkdir -p "$PATCH_DIR/$component/"
+    diff -Naru "$path" "$tmp" > "$PATCH_DIR/$component/$patch_name"
+
+    rm -r "$tmp"
+}
+
+function mkpatch_multiple() {
+    local component="$1"
+    local patch_name="$2"
+
+    local tmp_dir=$(mktemp -d --tmpdir "${component}-XXXXXXXXXX")
+
+    function _cb1() {
+        copy "$2" "$tmp_dir/$(basename "$1")"
+    }
+    for_config_item $component _cb1
+
+    $EDITOR "$tmp_dir"
+
+    mkdir -p "$PATCH_DIR/$component/"
+    function _cb2() {
+        diff -Naru "$2" "$tmp_dir/$(basename "$1")" >> "$PATCH_DIR/$component/$patch_name"
+    }
+    for_config_item $component _cb2
+
+    rm -r "$tmp_dir"
+}
+
+function action_mkpatch() {
+    local component="$1"
+    local patch_name="$2"
+
+    valid_component "$component" || exit -1
+    valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
+
+    local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
+    if [ -z "$config" ]; then
+        printf "No config available for $component\n"
+        return
+    fi
+
+    local cfg
+    IFS="," read -r -a cfg <<< "$config"
+    if [ "${#cfg[@]}" -eq 0 ]; then
+        return
+    elif [ "${#cfg[@]}" -eq 1 ]; then
+        local path
+        function _cb() {
+            path="$2"
+        }
+        for_config_item $component _cb
+        mkpatch_single $component "$path" "$patch_name"
+    else
+        mkpatch_multiple $component "$patch_name"
+    fi
+}
+
+function action_patch() {
+    local component="$1"
+    local patch_name="$2"
+
+    valid_component "$component" || exit -1
+    valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
+
+    patch -d / -r - -p1 < "$PATCH_DIR/$component/$patch_name"
+}
+
+function action_unpatch() {
+    local component="$1"
+    local patch_name="$2"
+
+    valid_component "$component" || exit -1
+    valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
+
+    patch -R -d / -r - -p1 < "$PATCH_DIR/$component/$patch_name"
+}
 
 
-while [ -n "$1" ]; do
-    case "$1" in
-        -h|--help)
-            usage
-            exit 0;;
+function add_components() {
+    while [ -n "$1" ]; do
+        case "$1" in
+            -*)
+                exit_with_err "Unknown argument: $1";;
+            *)
+                add_component "$1";;
+        esac
+        shift
+    done
+}
+
+function parse_arguments() {
+    while [ -z "$ACTION" ] && [ -n "$1" ]; do
+        case "$1" in
+            -h|--help)
+                usage
+                exit 0;;
+            -*)
+                exit_with_err "Unknown argument: $1";;
+            *)
+                ACTION="$1";;
+        esac
+        shift
+    done
+
+    case "$ACTION" in
+        edit|apply|reset|show)
+            add_components $@;;
+        mkpatch|patch|unpatch)
+            ;;
         *)
-            if [ -z "$ACTION" ]; then
-                ACTION="$1"
-            else
-                add_component "$1"
-            fi;;
+            printf "Invalid action: [$ACTION]\n"
+            usage
+            exit 1;;
     esac
-    shift
-done
+}
 
 
+parse_arguments $@
 case "$ACTION" in
     edit)
         action_edit;;
@@ -274,6 +400,12 @@ case "$ACTION" in
         action_reset;;
     show)
         action_show;;
+    mkpatch)
+        action_mkpatch "${@:2}";;
+    patch)
+        action_patch "${@:2}";;
+    unpatch)
+        action_unpatch "${@:2}";;
     *)
         printf "Invalid action: $ACTION\n"
         usage
