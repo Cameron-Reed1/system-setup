@@ -8,8 +8,8 @@ set -o pipefail
 export SHELLOPTS
 
 if [ -z "$HOME" ]; then
-    printf "Fatal error: \$HOME is not set!\n"
-    exit -1
+    echo "Fatal error: \$HOME is not set!"
+    exit 1
 fi
 
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -21,8 +21,8 @@ export PATCH_DIR="${PATCH_DIR:-$SETUP_DIR/patches}"
 
 
 function exit_with_err() {
-    printf "$(caller | awk '{print $NF}'): $@\n" >&2
-    exit -1
+    echo "$(caller | awk '{print $NF}'): $*" >&2
+    exit 1
 }
 
 
@@ -30,7 +30,7 @@ function valid_component() {
     [ -z "$1" ] && exit_with_err "Empty component name"
     [[ "$1" =~ ' ' ]] && exit_with_err "Invalid component name: '$1' contains a space"
     if [ ! -f "$COMPONENT_DIR/$1" ]; then
-        printf "$1 component does not exist\n"
+        echo "$1 component does not exist"
         return 1
     fi
     return 0
@@ -38,24 +38,24 @@ function valid_component() {
 
 
 function install_aur_pkg() {
-    if pacman -Q $1 > /dev/null; then
+    if pacman -Q "$1" > /dev/null; then
         return
     fi
 
-    if [ -d $HOME/builds/$1 ]; then
-        printf "Build directory for $1 already exists. Skipping installation\n"
+    if [ -d "$HOME/builds/$1" ]; then
+        echo "Build directory for $1 already exists. Skipping installation"
         return
     fi
-    mkdir -p $HOME/builds
+    mkdir -p "$HOME/builds"
 
-    git clone https://aur.archlinux.org/$1.git $HOME/builds/$1
-    ${EDITOR:-vim} $HOME/builds/$1/PKGBUILD
-    read -p "Install $1? [y/N]: "
+    git clone "https://aur.archlinux.org/$1.git" "$HOME/builds/$1"
+    ${EDITOR:-vim} "$HOME/builds/$1/PKGBUILD"
+    read -r -p "Install $1? [y/N]: "
 
     if [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ]; then
-        cd $HOME/builds/$1
+        pushd "$HOME/builds/$1" || return 1
         makepkg -ic
-        cd -
+        popd || return 2
     fi
 }
 
@@ -75,17 +75,17 @@ function copy() {
 
     if [ -f "$source" ]; then
         if [ -e "$dest" ] && [ ! -f "$dest" ]; then
-            printf "Refusing to copy $source to $dest. Source is a file, but destination is not\n"
+            echo "Refusing to copy $source to $dest. Source is a file, but destination is not"
             return 1
         fi
 
         if ! diff "$source" "$dest" > /dev/null 2>&1; then
-            $USE_SUDO mkdir -p $(dirname "$dest")
+            $USE_SUDO mkdir -p "$(dirname "$dest")"
             $USE_SUDO cp "$source" "$dest"
         fi
     elif [ -d "$source" ]; then
         if [ -e "$dest" ] && [ ! -d "$dest" ]; then
-            printf "Refusing to copy $source to $dest. Source is a directory, but destination is not\n"
+            echo "Refusing to copy $source to $dest. Source is a directory, but destination is not"
             return 1
         fi
 
@@ -97,7 +97,7 @@ function copy() {
             $USE_SUDO cp -r "$source/." "$dest"
         fi
     else
-        printf "WARNING: cannot copy $source to $dest because it does not exist"
+        echo "WARNING: cannot copy $source to $dest because it does not exist"
     fi
 }
 

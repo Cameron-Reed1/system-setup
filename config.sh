@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 
 
-export SETUP_DIR="${SETUP_DIR:-$(dirname $(realpath $0))}"
+export SETUP_DIR="${SETUP_DIR:-$(dirname "$(realpath "$0")")}"
 export UTIL_DIR="${UTIL_DIR:-$SETUP_DIR/util}"
 if [ ! -d "$UTIL_DIR" ]; then
-    printf "\$UTIL_DIR must point to the util/ directory, but is set to $UTIL_DIR, which is not a directory"
-    exit -1
+    echo "\$UTIL_DIR must point to the util/ directory, but is set to $UTIL_DIR, which is not a directory"
+    exit 255
 fi
 source "$UTIL_DIR/common"
 
 
 ACTION=""
 DEFAULT_EDITOR=""
-ARGS=()
 COMPONENTS=()
 
 if command -v nvim > /dev/null; then
@@ -29,16 +28,14 @@ EDITOR="${EDITOR:-$DEFAULT_EDITOR}"
 
 
 function usage() {
-    printf """Usage: $0 [action] [<component>..]
-
-action: edit | apply | reset | show\n"""
+    echo -e "Usage: $0 [action] [<component>..]\n\naction: edit | apply | reset | show"
 }
 
 
 function add_component() {
     valid_component "$1" || return
-    [[ " ${COMPONENTS[@]} " =~ " $1 " ]] && return;
-    COMPONENTS+=($1)
+    [[ " ${COMPONENTS[*]} " =~ " $1 " ]] && return;
+    COMPONENTS+=("$1")
 }
 
 
@@ -46,9 +43,10 @@ function for_config_item() {
     local component="$1"
     local cb="$2"
 
-    local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
+    local config
+    config=$("$UTIL_DIR"/runComponent.sh "$component" get_var config)
     if [ -z "$config" ]; then
-        printf "INFO: $component has no config defined\n"
+        echo "INFO: $component has no config defined"
         return 0
     fi
 
@@ -62,7 +60,7 @@ function for_config_item() {
             /*)
                 ;;
             ~/*)
-                second=$(printf "$second" | sed -e "s|^~|$HOME|");;
+                second="${second/\~/$HOME}";;
             ~*)
                 exit_with_err "Referencing other user's home directory is unsupported";;
             *)
@@ -79,8 +77,9 @@ function for_config_item() {
 function edit_single() {
     local component="$1"
     local path="$2"
-    [[ "$path" =~ "^${CONFIG_DIR}.*" ]] && return -1;
-    local base=$(basename "$path")
+    [[ "$path" =~ ^"${CONFIG_DIR}".* ]] || return 1;
+    local base
+    base=$(basename "$path")
     local name="${base%.*}"
     local ext="${base##*.}"
 
@@ -95,7 +94,7 @@ function edit_single() {
     elif [ -d "$path" ]; then
         tmp=$(mktemp -d --tmpdir "$template")
     else
-        return -1
+        return 1
     fi
 
     copy "$path" "$tmp"
@@ -112,17 +111,17 @@ function edit_single() {
 
     local input=""
     while true; do
-        read -p "Apply changes to ${component}? [Y/n] " input
-        input=$(printf "$input" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//")
+        read -r -p "Apply changes to ${component}? [Y/n] " input
+        input=$(echo "$input" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//")
 
         if [ -z "$input" ] || [ "$input" = "y" ] || [ "$input" = "Y" ]; then
-            apply_component $component
+            apply_component "$component"
             return 0
         elif [ "$input" = "n" ] || [ "$input" = "N" ]; then
             return 0
         fi
 
-        printf "\nInvalid input; try again\n"
+        echo -e "\nInvalid input; try again"
     done
 }
 
@@ -130,12 +129,13 @@ function edit_multiple() {
     local component="$1"
 
     local template="${component}-XXXXXXXXXX"
-    local tmp_dir=$(mktemp -d --tmpdir "$template")
+    local tmp_dir
+    tmp_dir=$(mktemp -d --tmpdir "$template")
 
     function _cb1() {
         copy "$1" "$tmp_dir/$(basename "$1")"
     }
-    for_config_item $component _cb1
+    for_config_item "$component" _cb1
 
     $EDITOR "$tmp_dir"
 
@@ -146,7 +146,7 @@ function edit_multiple() {
         fi
         copy "$tmp_dir/$(basename "$1")" "$1"
     }
-    for_config_item $component _cb2
+    for_config_item "$component" _cb2
 
     rm -r "$tmp_dir"
     if [ "$changed" -eq 0 ]; then
@@ -155,40 +155,42 @@ function edit_multiple() {
 
     local input=""
     while true; do
-        read -p "Apply changes to ${component}? [Y/n] " input
-        input=$(printf "$input" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//")
+        read -r -p "Apply changes to ${component}? [Y/n] " input
+        input=$(echo "$input" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//")
 
         if [ -z "$input" ] || [ "$input" = "y" ] || [ "$input" = "Y" ]; then
-            apply_component $component
+            apply_component "$component"
             return 0
         elif [ "$input" = "n" ] || [ "$input" = "N" ]; then
             return 0
         fi
 
-        printf "\nInvalid input; try again\n"
+        echo -e "\nInvalid input; try again"
     done
 }
 
 
 function action_edit() {
     for component in "${COMPONENTS[@]}"; do
-        printf "Editing $component\n"
-        local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
+        echo "Editing $component"
+        local config
+        config=$("$UTIL_DIR"/runComponent.sh "$component" get_var config)
         if [ -z "$config" ]; then
-            printf "No config available for $component\n"
+            echo "No config available for $component"
             continue
         fi
 
         local cfg
         IFS="," read -r -a cfg <<< "$config"
         if [ "${#cfg[@]}" -eq 0 ]; then
+            echo "No config available for $component"
             continue
         elif [ "${#cfg[@]}" -eq 1 ]; then
             local path="${cfg[0]}"
             path="${path%:*}"
-            edit_single $component "$CONFIG_DIR/$path"
+            edit_single "$component" "$CONFIG_DIR/$path" || echo "Failed to edit config for $component"
         else
-            edit_multiple $component
+            edit_multiple "$component" || echo "Failed to edit config for $component"
         fi
     done
 }
@@ -199,13 +201,13 @@ function apply_component() {
         copy "$1" "$2"
     }
 
-    for_config_item $1 _cb
-    "$UTIL_DIR"/runComponent.sh $1 manual_config
+    for_config_item "$1" _cb
+    "$UTIL_DIR"/runComponent.sh "$1" manual_config
 }
 
 function action_apply() {
     for component in "${COMPONENTS[@]}"; do
-        apply_component $component
+        apply_component "$component"
     done
 }
 
@@ -215,12 +217,12 @@ function reset_component() {
         copy "$2" "$1"
     }
 
-    for_config_item $1 _cb
+    for_config_item "$1" _cb
 }
 
 function action_reset() {
     for component in "${COMPONENTS[@]}"; do
-        reset_component $component
+        reset_component "$component"
     done
 }
 
@@ -231,12 +233,12 @@ function action_show() {
             local first="$1"
             local second="$2"
 
-            printf "\t$first -> $second\n"
+            echo -e "\t$first -> $second"
             diff -r "$first" "$second"
         }
-        printf "$component:\n"
-        for_config_item $component _cb
-        printf "\n"
+        echo "$component:"
+        for_config_item "$component" _cb
+        echo
     done
 }
 
@@ -252,7 +254,8 @@ function mkpatch_single() {
     local component="$1"
     local path="$2"
     local patch_name="$3"
-    local base=$(basename "$path")
+    local base
+    base=$(basename "$path")
     local name="${base%.*}"
     local ext="${base##*.}"
 
@@ -267,7 +270,7 @@ function mkpatch_single() {
     elif [ -d "$path" ]; then
         tmp=$(mktemp -d --tmpdir "$template")
     else
-        return -1
+        return 1
     fi
 
     copy "$path" "$tmp"
@@ -283,12 +286,13 @@ function mkpatch_multiple() {
     local component="$1"
     local patch_name="$2"
 
-    local tmp_dir=$(mktemp -d --tmpdir "${component}-XXXXXXXXXX")
+    local tmp_dir
+    tmp_dir=$(mktemp -d --tmpdir "${component}-XXXXXXXXXX")
 
     function _cb1() {
         copy "$2" "$tmp_dir/$(basename "$1")"
     }
-    for_config_item $component _cb1
+    for_config_item "$component" _cb1
 
     $EDITOR "$tmp_dir"
 
@@ -296,7 +300,7 @@ function mkpatch_multiple() {
     function _cb2() {
         diff -Naru "$2" "$tmp_dir/$(basename "$1")" >> "$PATCH_DIR/$component/$patch_name"
     }
-    for_config_item $component _cb2
+    for_config_item "$component" _cb2
 
     rm -r "$tmp_dir"
 }
@@ -305,12 +309,13 @@ function action_mkpatch() {
     local component="$1"
     local patch_name="$2"
 
-    valid_component "$component" || exit -1
+    valid_component "$component" || exit 255
     valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
 
-    local config=$("$UTIL_DIR"/runComponent.sh $component get_var config)
+    local config
+    config=$("$UTIL_DIR"/runComponent.sh "$component" get_var config)
     if [ -z "$config" ]; then
-        printf "No config available for $component\n"
+        echo "No config available for $component"
         return
     fi
 
@@ -323,10 +328,10 @@ function action_mkpatch() {
         function _cb() {
             path="$2"
         }
-        for_config_item $component _cb
-        mkpatch_single $component "$path" "$patch_name"
+        for_config_item "$component" _cb
+        mkpatch_single "$component" "$path" "$patch_name"
     else
-        mkpatch_multiple $component "$patch_name"
+        mkpatch_multiple "$component" "$patch_name"
     fi
 }
 
@@ -334,7 +339,7 @@ function action_patch() {
     local component="$1"
     local patch_name="$2"
 
-    valid_component "$component" || exit -1
+    valid_component "$component" || exit 255
     valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
 
     patch -d / -r - -p1 < "$PATCH_DIR/$component/$patch_name"
@@ -344,7 +349,7 @@ function action_unpatch() {
     local component="$1"
     local patch_name="$2"
 
-    valid_component "$component" || exit -1
+    valid_component "$component" || exit 255
     valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
 
     patch -R -d / -r - -p1 < "$PATCH_DIR/$component/$patch_name"
@@ -379,18 +384,18 @@ function parse_arguments() {
 
     case "$ACTION" in
         edit|apply|reset|show)
-            add_components $@;;
+            add_components "$@";;
         mkpatch|patch|unpatch)
             ;;
         *)
-            printf "Invalid action: [$ACTION]\n"
+            echo "Invalid action: [$ACTION]"
             usage
             exit 1;;
     esac
 }
 
 
-parse_arguments $@
+parse_arguments "$@"
 case "$ACTION" in
     edit)
         action_edit;;
@@ -407,7 +412,7 @@ case "$ACTION" in
     unpatch)
         action_unpatch "${@:2}";;
     *)
-        printf "Invalid action: $ACTION\n"
+        echo "Invalid action: $ACTION"
         usage
         exit 1;;
 esac

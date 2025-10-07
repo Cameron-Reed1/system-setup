@@ -9,23 +9,23 @@ VALID_ACTIONS="manual_install post_install manual_config"
 
 
 function run_if_exists() {
-    if command -v $1 > /dev/null; then
-        printf "Running $1 for component $COMPONENT\n"
+    if command -v "$1" > /dev/null; then
+        echo "Running $1 for component $COMPONENT"
         $1
     fi
 }
 
 
 function perform_action() {
-    source $COMPONENT_DIR/$COMPONENT
+    source "$COMPONENT_DIR/$COMPONENT"
     if [ "$ACTION" = "get_var" ]; then
         if [[ " $VALID_VARS " =~ " $1 " ]]; then
-            printf "${!1}"
+            echo -n "${!1}"
         else
             exit_with_err "Unknown variable: $1"
         fi
     elif [[ " $VALID_ACTIONS " =~ " $ACTION " ]]; then
-        run_if_exists $ACTION
+        run_if_exists "$ACTION"
     else
         exit_with_err "Unknown action: $ACTION"
     fi
@@ -33,7 +33,7 @@ function perform_action() {
 
 
 if [ ! -d "$COMPONENT_DIR" ]; then
-    exit_with_err '$COMPONENT_DIR is not set or is not a directory'
+    exit_with_err "$COMPONENT_DIR is not set or is not a directory"
 fi
 
 if [ ! -f "$COMPONENT_DIR/$COMPONENT" ]; then

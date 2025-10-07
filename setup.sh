@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 
-export SETUP_DIR="${SETUP_DIR:-$(dirname $(realpath $0))}"
+export SETUP_DIR="${SETUP_DIR:-$(dirname "$(realpath "$0")")}"
 export UTIL_DIR="${UTIL_DIR:-$SETUP_DIR/util}"
 if [ ! -d "$UTIL_DIR" ]; then
-    printf "\$UTIL_DIR must point to the util/ directory, but is set to $UTIL_DIR, which is not a directory"
-    exit -1
+    echo "\$UTIL_DIR must point to the util/ directory, but is set to $UTIL_DIR, which is not a directory"
+    exit 1
 fi
 source "$UTIL_DIR/common"
 
@@ -18,17 +18,17 @@ function add_component() {
         exit_with_err "Invalid component name: '$1' contains a space"
     fi
 
-    [[ " ${COMPONENTS[@]} " =~ " $1 " ]] && return;
+    [[ " ${COMPONENTS[*]} " =~ " $1 " ]] && return;
     if [ ! -f "$COMPONENT_DIR/$1" ]; then
-        printf "$1 component does not exist\n"
+        echo "$1 component does not exist"
         return
     fi
-    COMPONENTS+=($1)
+    COMPONENTS+=("$1")
 
-    deps=$("$UTIL_DIR"/runComponent.sh $1 get_var dependencies)
+    deps=$("$UTIL_DIR"/runComponent.sh "$1" get_var dependencies)
     if [ -n "$deps" ]; then
         for dep in $deps; do
-            add_component $dep
+            add_component "$dep"
         done
     fi
 }
@@ -38,43 +38,43 @@ function install_packages() {
     local packages=()
 
     function add_package() {
-        if [[ "$@" =~ ' ' ]]; then
-            for pkg in "$@"; do add_package $pkg; done
+        if [[ "$*" =~ ' ' ]]; then
+            for pkg in "$@"; do add_package "$pkg"; done
         fi
 
-        [[ " ${packages[@]} " =~ " $1 " ]] && return;
-        pacman -Q $1 > /dev/null && return
-        packages+=($1)
+        [[ " ${packages[*]} " =~ " $1 " ]] && return;
+        pacman -Q "$1" > /dev/null && return
+        packages+=("$1")
     }
 
     for component in "${COMPONENTS[@]}"; do
-        pkgs=$("$UTIL_DIR"/runComponent.sh $component get_var packages)
+        pkgs=$("$UTIL_DIR"/runComponent.sh "$component" get_var packages)
         if [ -n "$pkgs" ]; then
-            for pkg in $pkgs; do add_package $pkg; done
+            for pkg in $pkgs; do add_package "$pkg"; done
         fi
     done
 
     if [ -n "${packages[*]}" ]; then
-        sudo pacman -S --needed --noconfirm ${packages[*]}
+        sudo pacman -S --needed --noconfirm "${packages[@]}"
     fi
 
     for component in "${COMPONENTS[@]}"; do
-        "$UTIL_DIR"/runComponent.sh $component manual_install
+        "$UTIL_DIR"/runComponent.sh "$component" manual_install
     done
 
     for component in "${COMPONENTS[@]}"; do
-        "$UTIL_DIR"/runComponent.sh $component post_install
+        "$UTIL_DIR"/runComponent.sh "$component" post_install
     done
 }
 
 
 function install_configs() {
-    "$SETUP_DIR"/config.sh apply ${COMPONENTS[*]}
+    "$SETUP_DIR"/config.sh apply "${COMPONENTS[@]}"
 }
 
 
 function usage() {
-    printf "Usage: $0 [<component>...]\n"
+    echo "Usage: $0 [<component>...]"
     exit 0
 }
 
@@ -100,7 +100,7 @@ function parse_opts() {
 
 parse_opts "$@"
 
-printf "COMPONENTS: ${COMPONENTS[*]}\n\n"
+echo -e "COMPONENTS: ${COMPONENTS[*]}\n\n"
 
 install_packages
 install_configs
