@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-dependencies="terminal"
+dependencies=""
 packages="tmux"
 
 config="tmux/tmux.conf"

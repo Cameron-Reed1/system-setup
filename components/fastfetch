@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-packages="fastfetch"
-
-config="fastfetch/config.jsonc"

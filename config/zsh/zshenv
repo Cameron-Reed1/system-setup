@@ -3,18 +3,6 @@
 #
 
 
-if [ -d /opt/devkitpro ]; then
-    export DEVKITPRO=/opt/devkitpro
-    export DEVKITARM=$DEVKITPRO/devkitARM
-    export DEVKITPPC=$DEVKITPRO/devkitPPC
-fi
-
-if [ -d $HOME/.local/share/esp ]; then
-    export IDF_TOOLS_PATH=$HOME/.local/share/esp/idf
-fi
-
-
-
 # Copied from arch linux's default /etc/profile
 function append_path() {
     [ ! -d "$1" ] && return
@@ -27,9 +15,7 @@ function append_path() {
 }
 
 
-append_path "/home/cameron/.local/share/JetBrains/Toolbox/scripts"
 append_path "$HOME/.local/bin"
-append_path "$HOME/.config/emacs/bin"
 append_path "$HOME/go/bin"
 
 

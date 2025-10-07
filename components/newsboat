@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-packages="newsboat"
-
-config="newsboat/urls"

@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-dependencies="terminal"
-packages="yazi"
-
-config="yazi/yazi.toml"

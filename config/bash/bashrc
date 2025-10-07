@@ -1,0 +1,23 @@
+case $- in
+    *i*) ;;
+    *) return;;
+esac
+
+
+if [ -n "$SSH_CONNECTION" ] && [ -z "$TMUX" ] && command -v tmux &> /dev/null; then
+    tmux
+    exit
+fi
+
+
+HISTCONTROL=ignoreboth
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+shopt -s histappend
+shopt -s checkwinsize
+
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi

@@ -1,0 +1,25 @@
+# vim: set ft=bash
+
+alias grep='grep --color=auto'
+if command -v eza &> /dev/null; then
+    alias ls='eza --icons=auto --group-directories-first'
+else
+    alias ls='ls --color=auto'
+fi
+
+
+if command -v nvim &> /dev/null; then
+    alias nv='nvim'
+    alias nvd='nvim .'
+    alias nvc='nvim -c "edit \$MYVIMRC"'
+fi
+
+
+if command -v fastfetch &> /dev/null; then
+    alias ff='fastfetch'
+fi
+
+
+alias :w='echo "Saved"'
+alias :q='exit'
+alias :wq='exit'

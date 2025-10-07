@@ -28,9 +28,6 @@ alias nv='nvim'
 alias nvd='nvim .'
 alias nvc='nvim -c "edit \$MYVIMRC"'
 
-# D:
-alias em='emacs'
-
 
 alias c='clear'
 alias cdf='cd $(find -L . -type d -print 2> /dev/null | fzf)'
@@ -42,9 +39,6 @@ alias makew='make -f Makefile.win'
 alias :w='printf "Saved\n"'
 alias :q='exit'
 alias :wq='exit'
-
-alias mkvenv='python3 -m venv venv'
-alias arduino-cli='arduino-cli --config-dir "$HOME/.config/arduino/"'
 
 if command -v zigup &> /dev/null; then
     alias zigup='zigup --install-dir "$HOME/.local/share/zigup" --path-link "$HOME/.local/bin/zig-local"'

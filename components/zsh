@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-dependencies="terminal"
+dependencies=""
 packages="zsh"
 
 config="zsh/zshrc:zsh/.zshrc,zsh/zshenv:zsh/.zshenv,zsh/zprofile:zsh/.zprofile,zsh/aliases:zsh/.aliases,zsh/home_zshenv:$HOME/.zshenv"

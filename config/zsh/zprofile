@@ -2,11 +2,4 @@
 # $ZDOTDIR/.zprofile
 #
 
-
 [[ -f ~/.profile ]] && . ~/.profile
-
-
-if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-    export MOZ_ENABLE_WAYLAND=1
-fi
-

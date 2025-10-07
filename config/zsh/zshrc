@@ -232,11 +232,6 @@ function rmbookmark() {
     fi
 }
 
-function get_idf() {
-    . $HOME/.local/share/esp/esp-idf/export.sh
-    alias idf="idf.py"
-}
-
 function yazicd() {
     file=$(mktemp)
     yazi --cwd-file="$file" "$@"
@@ -252,13 +247,6 @@ function py() {
     fi
 }
 
-function edit_cfg() {
-    cfg=$(find $HOME/system/config/ -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | fzf)
-    if [ -d "$HOME/system/config/$cfg" ]; then
-        ${EDITOR:-nvim} "$HOME/system/config/$cfg"
-    fi
-}
-
 
 
 # Initialize direnv if it exists
@@ -266,7 +254,9 @@ if command -v direnv &> /dev/null; then
 	eval "$(direnv hook zsh)"
 fi
 
-fastfetch
+if command -v fastfetch &> /dev/null; then
+    fastfetch
+fi
 
 
 # Unset extra variables

@@ -43,7 +43,10 @@ function install_packages() {
         fi
 
         [[ " ${packages[*]} " =~ " $1 " ]] && return;
-        pacman -Q "$1" > /dev/null && return
+        local status=$(dpkg-query -W --showformat='${db:Status-Status}' "$1" 2>&1)
+        if [ $? -ne 0 ] || [ "$status" != 'installed' ]; then
+            return;
+        fi
         packages+=("$1")
     }
 
@@ -55,7 +58,7 @@ function install_packages() {
     done
 
     if [ -n "${packages[*]}" ]; then
-        sudo pacman -S --needed --noconfirm "${packages[@]}"
+        sudo apt-get install -y "${packages[@]}"
     fi
 
     for component in "${COMPONENTS[@]}"; do

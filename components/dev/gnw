@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-dependencies="dev/base"
-packages="tcl"
-
-
-function manual_install() {
-    install_aur_pkg openocd-game-and-watch-git
-}

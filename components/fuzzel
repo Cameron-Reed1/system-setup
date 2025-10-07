@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-dependencies=""
-packages="fuzzel"
-
-config="fuzzel/fuzzel.ini"

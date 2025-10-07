@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-dependencies=""
-packages="lemurs"
-
-config="lemurs/config.toml:/etc/lemurs/config.toml"

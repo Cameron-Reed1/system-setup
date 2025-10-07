@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-packages="hypridle"
-
-config="hypr/hypridle.conf"

@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-dependencies=""
-packages="alacritty"
-
-config="alacritty/alacritty.toml"
