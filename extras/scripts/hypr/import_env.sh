@@ -3,7 +3,7 @@ set -e
 
 [[ -n $HYPRLAND_DEBUG_CONF ]] && exit 0
 USAGE="\
-Import environment variables 
+Import environment variables
 
 Usgae: $0 <command>
 
@@ -30,6 +30,8 @@ _envs=(
 	# hyprland
 	HYPRLAND_CMD
 	HYPRLAND_INSTANCE_SIGNATURE
+    # niri
+    NIRI_SOCKET
 	# sway
 	SWAYSOCK
 	# misc

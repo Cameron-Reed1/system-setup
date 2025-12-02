@@ -62,10 +62,12 @@
       "format": "{}% "
     },
     "modules-center": [
-      "hyprland/window"
+      "hyprland/window",
+      "niri/window"
     ],
     "modules-left": [
-      "hyprland/workspaces"
+      "hyprland/workspaces",
+      "niri/workspaces"
     ],
     "modules-right": [
       "custom/recording",

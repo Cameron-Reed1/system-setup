@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+dependencies=""
+packages="mako"
+
+config="mako/config"
