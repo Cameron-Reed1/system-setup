@@ -347,8 +347,16 @@ window-rule {
 
 window-rule {
     match app-id=r#"^com\.mojang\.minecraft\.java-edition$"#
-    match app-id=r#"^Minecraft.*"#
+    match app-id=r#"^Minecraft"#
     open-floating true
+}
+
+window-rule {
+    match app-id=r#"firefox$"#
+    match app-id=r#"^steam$"#
+    match app-id=r#"^jetbrains"#
+    match app-id=r#"^cef$"# // Grayjay
+    open-maximized true
 }
 
 // Example: block out two password managers from screen capture.
@@ -366,7 +374,7 @@ window-rule {
 // Example: enable rounded corners for all windows.
 // (This example rule is commented out with a "/-" in front.)
 window-rule {
-    geometry-corner-radius 2
+    geometry-corner-radius 3
     clip-to-geometry true
 }
 
