@@ -4,4 +4,4 @@ dependencies="hypr/hypridle hypr/hyprlock hypr/hyprpaper mako waybar"
 packages="niri hyprpolkitagent xdg-desktop-portal-gtk xdg-desktop-portal-gnome xwayland-satellite"
 
 config="niri/config.kdl"
-scripts="hypr/import_env.sh,wmenu/logout.sh"
+scripts="hypr/import_env.sh,niri/lock.sh,wmenu/logout.sh"
