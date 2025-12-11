@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 
 
+case $(basename "$0") in
+    config|config.sh)
+        SUB_CMD="config";;
+    script|script.sh)
+        SUB_CMD="script";;
+    *)
+        SUB_CMD="$1"
+        shift;;
+esac
+
+if [ "$SUB_CMD" != "config" ] && [ "$SUB_CMD" != "script" ]; then
+    echo "Invalid sub command '$SUB_CMD'" >&2
+    exit 1
+fi
+
+
 export SETUP_DIR="${SETUP_DIR:-$(dirname "$(realpath "$0")")}"
 export UTIL_DIR="${UTIL_DIR:-$SETUP_DIR/util}"
 if [ ! -d "$UTIL_DIR" ]; then
@@ -8,6 +24,16 @@ if [ ! -d "$UTIL_DIR" ]; then
     exit 255
 fi
 source "$UTIL_DIR/common"
+
+if [ "$SUB_CMD" = "config" ]; then
+    SUB_CMD_VAR="config"
+    LOCAL_BASE_DIR="$CONFIG_DIR"
+    SYSTEM_BASE_DIR="$XDG_CONFIG_HOME"
+else
+    SUB_CMD_VAR="scripts"
+    LOCAL_BASE_DIR="$EXTRAS_DIR/scripts"
+    SYSTEM_BASE_DIR="$HOME/scripts"
+fi
 
 
 ACTION=""
@@ -28,7 +54,12 @@ EDITOR="${EDITOR:-$DEFAULT_EDITOR}"
 
 
 function usage() {
-    echo -e "Usage: $0 [action] [<component>..]\n\naction: edit | apply | reset | show"
+    case $(basename "$0") in
+        config|config.sh|script|script.sh)
+            echo -e "Usage: $0 [action] [<component>..]\n\naction: edit | apply | reset | show";;
+        *)
+            echo -e "Usage: $0 [sub_cmd] [action] [<component>..]\n\nsub_cmd: config | script\naction: edit | apply | reset | show";;
+    esac
 }
 
 
@@ -39,20 +70,20 @@ function add_component() {
 }
 
 
-function for_config_item() {
+function for_each_entry() {
     local component="$1"
     local cb="$2"
 
-    local config
-    config=$("$UTIL_DIR"/runComponent.sh "$component" get_var config)
-    if [ -z "$config" ]; then
-        echo "INFO: $component has no config defined"
+    local entries_str
+    entries_str=$("$UTIL_DIR"/runComponent.sh "$component" get_var "$SUB_CMD_VAR")
+    if [ -z "$entries_str" ]; then
+        echo "INFO: $component has no $SUB_CMD_VAR defined"
         return 0
     fi
 
-    local cfg_arr
-    IFS=',' read -r -a cfg_arr <<< "$config"
-    for entry in "${cfg_arr[@]}"; do
+    local entries
+    IFS=',' read -r -a entries <<< "$entries_str"
+    for entry in "${entries[@]}"; do
         local first="${entry%:*}"
         local second="${entry##*:}"
 
@@ -64,10 +95,10 @@ function for_config_item() {
             ~*)
                 exit_with_err "Referencing other user's home directory is unsupported";;
             *)
-                second="$XDG_CONFIG_HOME/$second";;
+                second="$SYSTEM_BASE_DIR/$second";;
         esac
 
-        first="$CONFIG_DIR/$first"
+        first="$LOCAL_BASE_DIR/$first"
 
         "$cb" "$first" "$second"
     done
@@ -77,7 +108,7 @@ function for_config_item() {
 function edit_single() {
     local component="$1"
     local path="$2"
-    [[ "$path" =~ ^"${CONFIG_DIR}".* ]] || return 1;
+    [[ "$path" =~ ^"${LOCAL_BASE_DIR}".* ]] || return 1;
     local base
     base=$(basename "$path")
     local name="${base%.*}"
@@ -135,7 +166,7 @@ function edit_multiple() {
     function _cb1() {
         copy "$1" "$tmp_dir/$(basename "$1")"
     }
-    for_config_item "$component" _cb1
+    for_each_entry "$component" _cb1
 
     $EDITOR "$tmp_dir"
 
@@ -146,7 +177,7 @@ function edit_multiple() {
         fi
         copy "$tmp_dir/$(basename "$1")" "$1"
     }
-    for_config_item "$component" _cb2
+    for_each_entry "$component" _cb2
 
     rm -r "$tmp_dir"
     if [ "$changed" -eq 0 ]; then
@@ -173,24 +204,24 @@ function edit_multiple() {
 function action_edit() {
     for component in "${COMPONENTS[@]}"; do
         echo "Editing $component"
-        local config
-        config=$("$UTIL_DIR"/runComponent.sh "$component" get_var config)
-        if [ -z "$config" ]; then
-            echo "No config available for $component"
+        local entries_str
+        entries_str=$("$UTIL_DIR"/runComponent.sh "$component" get_var "$SUB_CMD_VAR")
+        if [ -z "$entries_str" ]; then
+            echo "No $SUB_CMD_VAR available for $component"
             continue
         fi
 
-        local cfg
-        IFS="," read -r -a cfg <<< "$config"
-        if [ "${#cfg[@]}" -eq 0 ]; then
-            echo "No config available for $component"
+        local entries
+        IFS="," read -r -a entries <<< "$entries_str"
+        if [ "${#entries[@]}" -eq 0 ]; then
+            echo "No $SUB_CMD_VAR available for $component"
             continue
-        elif [ "${#cfg[@]}" -eq 1 ]; then
-            local path="${cfg[0]}"
+        elif [ "${#entries[@]}" -eq 1 ]; then
+            local path="${entries[0]}"
             path="${path%:*}"
-            edit_single "$component" "$CONFIG_DIR/$path" || echo "Failed to edit config for $component"
+            edit_single "$component" "$LOCAL_BASE_DIR/$path" || echo "Failed to edit $SUB_CMD_VAR for $component"
         else
-            edit_multiple "$component" || echo "Failed to edit config for $component"
+            edit_multiple "$component" || echo "Failed to edit $SUB_CMD_VAR for $component"
         fi
     done
 }
@@ -199,10 +230,15 @@ function action_edit() {
 function apply_component() {
     function _cb() {
         copy "$1" "$2"
+        if [ "$SUB_CMD" = "script" ]; then
+            chmod 755 "$2"
+        fi
     }
 
-    for_config_item "$1" _cb
-    "$UTIL_DIR"/runComponent.sh "$1" manual_config
+    for_each_entry "$1" _cb
+    if [ "$SUB_CMD" = "config" ]; then
+        "$UTIL_DIR"/runComponent.sh "$1" manual_config
+    fi
 }
 
 function action_apply() {
@@ -217,7 +253,7 @@ function reset_component() {
         copy "$2" "$1"
     }
 
-    for_config_item "$1" _cb
+    for_each_entry "$1" _cb
 }
 
 function action_reset() {
@@ -237,7 +273,7 @@ function action_show() {
             diff -r "$first" "$second"
         }
         echo "$component:"
-        for_config_item "$component" _cb
+        for_each_entry "$component" _cb
         echo
     done
 }
@@ -292,7 +328,7 @@ function mkpatch_multiple() {
     function _cb1() {
         copy "$2" "$tmp_dir/$(basename "$1")"
     }
-    for_config_item "$component" _cb1
+    for_each_entry "$component" _cb1
 
     $EDITOR "$tmp_dir"
 
@@ -300,7 +336,7 @@ function mkpatch_multiple() {
     function _cb2() {
         diff -Naru "$2" "$tmp_dir/$(basename "$1")" >> "$PATCH_DIR/$component/$patch_name"
     }
-    for_config_item "$component" _cb2
+    for_each_entry "$component" _cb2
 
     rm -r "$tmp_dir"
 }
@@ -312,23 +348,23 @@ function action_mkpatch() {
     valid_component "$component" || exit 255
     valid_patch_name "$patch_name" || exit_with_err "Invalid patch name: \"$patch_name\""
 
-    local config
-    config=$("$UTIL_DIR"/runComponent.sh "$component" get_var config)
-    if [ -z "$config" ]; then
-        echo "No config available for $component"
+    local entries_str
+    entries_str=$("$UTIL_DIR"/runComponent.sh "$component" get_var "$SUB_CMD_VAR")
+    if [ -z "$entries_str" ]; then
+        echo "No $SUB_CMD_VAR available for $component"
         return
     fi
 
-    local cfg
-    IFS="," read -r -a cfg <<< "$config"
-    if [ "${#cfg[@]}" -eq 0 ]; then
+    local entries
+    IFS="," read -r -a entries <<< "$entries_str"
+    if [ "${#entries[@]}" -eq 0 ]; then
         return
-    elif [ "${#cfg[@]}" -eq 1 ]; then
+    elif [ "${#entries[@]}" -eq 1 ]; then
         local path
         function _cb() {
             path="$2"
         }
-        for_config_item "$component" _cb
+        for_each_entry "$component" _cb
         mkpatch_single "$component" "$path" "$patch_name"
     else
         mkpatch_multiple "$component" "$patch_name"

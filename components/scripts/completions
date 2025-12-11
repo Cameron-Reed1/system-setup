@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+
+function manual_install() {
+    if [ -z "$SETUP_DIR" ] || [ ! -d "$SETUP_DIR" ]; then
+        exit_with_err "\$SETUP_DIR is not set or is not a directory"
+    fi
+
+    "$SETUP_DIR"/completions/install.sh
+}

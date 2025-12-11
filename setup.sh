@@ -69,7 +69,7 @@ function install_packages() {
 
 
 function install_configs() {
-    "$SETUP_DIR"/config.sh apply "${COMPONENTS[@]}"
+    "$SETUP_DIR"/manage.sh config apply "${COMPONENTS[@]}"
 }
 
 

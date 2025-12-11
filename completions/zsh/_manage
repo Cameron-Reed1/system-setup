@@ -1,18 +1,15 @@
-#compdef config
+#compdef config script
 
 _arguments '-h[show help]' '--help[show help]' '1:action arg:((edit\:"edit configs" apply\:"apply configs" reset\:"reset working config to the currently active version" show\:"show config mappings" mkpatch\:"make patch for component" patch\:"apply patch to component" unpatch\:"revert patch to component"))'
 
 
 if [ "$CURRENT" -gt 2 ]; then
     case "${words[2]}" in
-        edit|apply|reset)
-            echo "edit|apply|reset" >> /home/cameron-arch/_config.log
+        edit|apply|reset|show)
             _arguments '*:component arg:_path_files -W __COMPONENT_DIR__';;
         mkpatch)
-            echo "mkpatch" >> /home/cameron-arch/_config.log
             _arguments '2:component arg:_path_files -W __COMPONENT_DIR__' '3:patch_name arg: ';;
         patch|unpatch)
-            echo "patch|unpatch" >> /home/cameron-arch/_config.log
             _arguments '2:component arg:_path_files -W __COMPONENT_DIR__' "3:patch_name arg:_path_files -W __PATCH_DIR__/${words[3]}";;
         *)
             ;;

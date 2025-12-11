@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+dependencies="scripts/manage_config scripts/manage_scripts scripts/completions"
