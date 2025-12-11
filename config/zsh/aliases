@@ -52,6 +52,9 @@ fi
 
 alias req='pip3 --require-virtualenv freeze > requirements.txt'
 
+# Use ~/.local/bin/script instead of /usr/bin/script
+alias script="$HOME/.local/bin/script"
+
 bindkey -s '^o' 'yazicd\n'
 bindkey -s '^n' 'nvd\n'
 bindkey -s '^f' 'yazi\n'
