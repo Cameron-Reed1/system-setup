@@ -4,15 +4,4 @@ dependencies="hypr/hypridle hypr/hyprlock hypr/hyprpaper waybar"
 packages="hyprland hyprland-protocols hyprpolkitagent"
 
 config="hypr/hyprland.conf"
-
-
-function post_install() {
-    if [ -z "$EXTRAS_DIR" ] || [ ! -d "$EXTRAS_DIR" ]; then
-        exit_with_err "\$EXTRAS_DIR is not set or is not a directory"
-    fi
-
-    copy $EXTRAS_DIR/scripts/hypr/import_env.sh $HOME/scripts/hypr/import_env.sh
-    copy $EXTRAS_DIR/scripts/hypr/record.sh $HOME/scripts/hypr/record.sh
-    copy $EXTRAS_DIR/scripts/wmenu/logout.sh $HOME/scripts/wmenu/logout.sh
-    chmod 755 $HOME/scripts/hypr/import_env.sh $HOME/scripts/hypr/record.sh $HOME/scripts/wmenu/logout.sh
-}
+scripts="hypr/import_env.sh,hypr/record.sh,wmenu/logout.sh"
