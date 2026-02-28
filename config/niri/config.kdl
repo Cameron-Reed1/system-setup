@@ -286,7 +286,7 @@ spawn-at-startup "hyprpaper"
 spawn-at-startup "hypridle"
 spawn-at-startup "$HOME/scripts/hypr/import_env.sh" "tmux"
 spawn-at-startup "$HOME/scripts/hypr/import_env.sh" "system"
-spawn-at-startup "/usr/bin/kanata" "--cfg" "$HOME/.config/kanata/config.kbd"
+spawn-at-startup "/usr/bin/kanata" "--cfg" "~/.config/kanata/config.kbd"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
@@ -396,8 +396,9 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty" "-e" "tmux"; }
     Mod+R hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    Mod+A hotkey-overlay-title="Select an open window" { spawn-sh "$HOME/scripts/niri/select_window.sh"; }
     Super+Escape hotkey-overlay-title="Lock the Screen: hyprlock" { spawn "hyprlock"; }
-    Mod+B hotkey-overlay-title="Open a Browser: firefox" { spawn "firefox"; }
+    Mod+B hotkey-overlay-title="Open/focus a Browser: firefox" { spawn-sh "$HOME/scripts/niri/focus_or_spawn.sh firefox firefox"; }
     Mod+F hotkey-overlay-title="Open a File Manager: yazi" { spawn "alacritty" "-e" "yazi"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
