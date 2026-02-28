@@ -16,6 +16,7 @@ if [ "$TERM" = 'xterm-kitty' ]; then
 fi
 
 
+alias pgrep='pgrep -a'
 alias grep='grep --color=auto'
 if command -v eza &> /dev/null; then
     alias ls='eza --icons=auto --group-directories-first'
@@ -27,9 +28,6 @@ fi
 alias nv='nvim'
 alias nvd='nvim .'
 alias nvc='nvim -c "edit \$MYVIMRC"'
-
-# D:
-alias em='emacs'
 
 
 alias c='clear'

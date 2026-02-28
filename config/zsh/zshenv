@@ -14,6 +14,9 @@ if [ -d $HOME/.local/share/esp ]; then
 fi
 
 
+export ZVM_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/zvm"
+
+
 
 # Copied from arch linux's default /etc/profile
 function append_path() {
@@ -31,6 +34,7 @@ append_path "/home/cameron/.local/share/JetBrains/Toolbox/scripts"
 append_path "$HOME/.local/bin"
 append_path "$HOME/.config/emacs/bin"
 append_path "$HOME/go/bin"
+append_path "$ZVM_PATH/bin"
 
 
 export PATH
