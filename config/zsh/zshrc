@@ -90,6 +90,13 @@ setopt prompt_subst
 PROMPT_COLORS=''
 PROMPT_PREFIXES=''
 
+
+function set_title() {
+    local title="$1"
+
+    printf "\x1b]0;$title\x07"
+}
+
 function set_prompt() {
 	local colors=(${(@s:~:)PROMPT_COLORS})
 	local prefixes=(${(@s:~:)PROMPT_PREFIXES})
@@ -128,6 +135,7 @@ function manage_environments() {
             environment="just:$(basename $dir) "
             RUN_CMD="just run"
             BUILD_CMD="just build"
+            set_title "$(basename $dir) [just]"
             break
         fi
 
@@ -135,6 +143,7 @@ function manage_environments() {
             environment="cmake:$(basename $dir) "
             RUN_CMD="cmake --build $dir/build --target install"
             BUILD_CMD="cmake --build $dir/build"
+            set_title "$(basename $dir) [cmake]"
             break
         fi
 
@@ -142,6 +151,7 @@ function manage_environments() {
             environment="make:$(basename $dir) "
             RUN_CMD="make -C $dir run"
             BUILD_CMD="make -C $dir"
+            set_title "$(basename $dir) [make]"
             break
         fi
 
@@ -149,6 +159,7 @@ function manage_environments() {
             environment="zig:$(basename $dir) "
             RUN_CMD="zig build run"
             BUILD_CMD="zig build"
+            set_title "$(basename $dir) [zig]"
             break
         fi
 
@@ -166,6 +177,7 @@ function manage_environments() {
             elif [ "${#pyfiles}" -eq 1 ]; then
                 RUN_CMD="python3 ${pyfiles}"
             fi
+            set_title "$(basename $dir) [python]"
             break
         fi
 
@@ -175,6 +187,10 @@ function manage_environments() {
 
     if [ -n "$VIRTUAL_ENV" ] && [[ ! "$environment" =~ "python" ]]; then
         deactivate
+    fi
+
+    if [ -z "$environment" ]; then
+        set_title "$(pwd)"
     fi
 }
 
