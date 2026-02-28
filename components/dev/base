@@ -6,6 +6,11 @@ packages="base-devel clang cmake gcc git go lld llvm make ninja rustup zig"
 config="pycodestyle,zls.json"
 
 
+function manual_install() {
+    install_aur_pkg zvm
+}
+
+
 function post_install() {
     if [ "$(rustup toolchain list)" = "no installed toolchains" ]; then
         rustup default stable
