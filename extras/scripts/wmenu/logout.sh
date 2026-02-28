@@ -12,13 +12,13 @@ echo "$session"
 
 
 if [ "$session" = "unknown" ]; then
-    options='Lock session\nShutdown\nReboot\nReboot to UEFI Settings'
+    options='Lock session\x00icon\x1flock\nShutdown\x00icon\x1fpower\nReboot\x00icon\x1freboot\nReboot to UEFI Settings\x00icon\x1fuefi'
 else
-    options='Log out\nLock session\nShutdown\nReboot\nReboot to UEFI Settings'
+    options='Log out\x00icon\x1flogout\nLock session\x00icon\x1flock\nShutdown\x00icon\x1fpower\nReboot\x00icon\x1freboot\nReboot to UEFI Settings\x00icon\x1fuefi'
 fi
 
-# answer=$(echo -e "$options" | fuzzel -d -p 'Action:')
-answer=$(echo -e "$options" | wmenu -l "$(echo -e "$options" | wc -l)" -i -p 'Action:')
+answer=$(echo -e "$options" | fuzzel -d -p 'Action: ')
+# answer=$(echo -e "$options" | wmenu -l "$(echo -e "$options" | wc -l)" -i -p 'Action:')
 
 case $answer in
 	'Log out')
