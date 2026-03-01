@@ -5,7 +5,7 @@ COMPONENT="$1"; shift
 ACTION="$1"; shift
 
 VALID_VARS="dependencies packages config scripts"
-VALID_ACTIONS="manual_install post_install manual_config"
+VALID_ACTIONS="manual_install post_install manual_config reload_config"
 
 
 function run_if_exists() {

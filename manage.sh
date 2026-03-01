@@ -238,6 +238,7 @@ function apply_component() {
     for_each_entry "$1" _cb
     if [ "$SUB_CMD" = "config" ]; then
         "$UTIL_DIR"/runComponent.sh "$1" manual_config
+        "$UTIL_DIR"/runComponent.sh "$1" reload_config
     fi
 }
 

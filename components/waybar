@@ -4,3 +4,8 @@ dependencies=""
 packages="waybar"
 
 config="waybar/config,waybar/style.css"
+
+
+function reload_config() {
+    killall -SIGUSR2 waybar
+}
