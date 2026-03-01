@@ -4,7 +4,7 @@ dependencies="hypr/hypridle hypr/hyprlock hypr/hyprpaper mako waybar"
 packages="niri hyprpolkitagent xdg-desktop-portal-gtk xdg-desktop-portal-gnome xwayland-satellite"
 
 config="niri/config.kdl"
-scripts="hypr/import_env.sh,niri/focus_or_spawn.sh,niri/focus_window.sh,niri/kill_window.sh,niri/lock.sh,niri/screenshot.sh,niri/select_window.sh,wmenu/logout.sh"
+scripts="hypr/import_env.sh,niri/focus_or_spawn.sh,niri/focus_window.sh,niri/kill_window.sh,niri/lock.sh,niri/record.sh,niri/screenshot.sh,niri/select_window.sh,wmenu/logout.sh"
 
 
 function post_install() {

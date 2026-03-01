@@ -631,6 +631,7 @@ binds {
     // Mod+Shift+Space { switch-layout "prev"; }
 
     Mod+F11 { spawn "~/scripts/niri/screenshot.sh"; }
+    Mod+F12 { spawn "~/scripts/niri/record.sh"; }
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }

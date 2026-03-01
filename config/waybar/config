@@ -141,7 +141,9 @@
     "custom/recording": {
         "hide-empty-text": true,
         "exec": "ps -o cmd= -p \"$(pidof wf-recorder)\" 2>/dev/null",
-        "format": "",
+        "on-click": "pkill wf-recorder",
+        "format": "{icon}",
+        "format-icons": " ",
         "tooltip-format": "{}",
         "signal": 12,
         "interval": 60
