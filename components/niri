@@ -4,7 +4,7 @@ dependencies="hypr/hypridle hypr/hyprlock hypr/hyprpaper mako waybar"
 packages="niri hyprpolkitagent xdg-desktop-portal-gtk xdg-desktop-portal-gnome xwayland-satellite"
 
 config="niri/config.kdl"
-scripts="hypr/import_env.sh,niri/lock.sh,niri/focus_or_spawn.sh,niri/select_window.sh,wmenu/logout.sh"
+scripts="hypr/import_env.sh,niri/focus_or_spawn.sh,niri/focus_window.sh,niri/kill_window.sh,niri/lock.sh,niri/screenshot.sh,niri/select_window.sh,wmenu/logout.sh"
 
 
 function post_install() {
@@ -16,17 +16,27 @@ function post_install() {
     curl -s https://site-assets.fontawesome.com/releases/v7.2.0/svgs-full/solid/arrows-rotate.svg -o ~/.local/share/icons/reboot.svg
     curl -s https://site-assets.fontawesome.com/releases/v7.2.0/svgs-full/solid/microchip.svg -o ~/.local/share/icons/uefi.svg
 
+    curl -s https://site-assets.fontawesome.com/releases/v7.2.0/svgs-full/solid/border-none.svg -o ~/.local/share/icons/selection.svg
+    curl -s https://site-assets.fontawesome.com/releases/v7.2.0/svgs-full/solid/window-maximize.svg -o ~/.local/share/icons/window.svg
+    curl -s https://site-assets.fontawesome.com/releases/v7.2.0/svgs-full/solid/display.svg -o ~/.local/share/icons/monitor.svg
+
     sed -i 's|fill="[^"]*"|fill="#eeeeee"|' \
         ~/.local/share/icons/logout.svg \
         ~/.local/share/icons/lock.svg \
         ~/.local/share/icons/power.svg \
         ~/.local/share/icons/reboot.svg \
-        ~/.local/share/icons/uefi.svg
+        ~/.local/share/icons/uefi.svg \
+        ~/.local/share/icons/selection.svg \
+        ~/.local/share/icons/window.svg \
+        ~/.local/share/icons/monitor.svg
 
     sed -i 's|<path d|<path fill="#eeeeee" d|' \
         ~/.local/share/icons/logout.svg \
         ~/.local/share/icons/lock.svg \
         ~/.local/share/icons/power.svg \
         ~/.local/share/icons/reboot.svg \
-        ~/.local/share/icons/uefi.svg
+        ~/.local/share/icons/uefi.svg \
+        ~/.local/share/icons/selection.svg \
+        ~/.local/share/icons/window.svg \
+        ~/.local/share/icons/monitor.svg
 }
