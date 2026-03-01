@@ -396,7 +396,7 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty" "-e" "tmux"; }
     Mod+R hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
-    Mod+A hotkey-overlay-title="Select an open window" { spawn "~/scripts/niri/select_window.sh"; }
+    Mod+A hotkey-overlay-title="Focus an open window" { spawn "~/scripts/niri/focus_window.sh"; }
     Super+Escape hotkey-overlay-title="Lock the Screen: hyprlock" { spawn "hyprlock"; }
     Mod+B hotkey-overlay-title="Open/focus a Browser: firefox" { spawn "~/scripts/niri/focus_or_spawn.sh" "firefox" "firefox"; }
     Mod+F hotkey-overlay-title="Open a File Manager: yazi" { spawn "alacritty" "-e" "yazi"; }

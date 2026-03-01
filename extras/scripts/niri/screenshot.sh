@@ -3,7 +3,7 @@
 
 options='Selection\x00icon\x1fselection\nWindow\x00icon\x1fwindow\nMonitor\x00icon\x1fmonitor'
 
-answer=$(echo -e "$options" | fuzzel -d -p 'Action: ')
+answer=$(echo -e "$options" | fuzzel -d -p 'Screenshot: ')
 
 case $answer in
 	'Selection')
